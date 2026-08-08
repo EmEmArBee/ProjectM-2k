@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ProjectM Overlay</string>
+    <string name="settings">Impostazioni</string>
+
+    <string name="section_logo">Logo</string>
+    <string name="pick_logo">Carica logo PNG</string>
+
+    <string name="section_pulse">Pulsazione logo a ritmo di bassi</string>
+    <string name="pulse_scale">Scala</string>
+    <string name="pulse_opacity">Opacità</string>
+    <string name="pulse_both">Entrambi</string>
+    <string name="pulse_intensity">Intensità</string>
+    <string name="pulse_speed">Velocità</string>
+
+    <string name="section_audio_source">Sorgente audio</string>
+    <string name="pick_internal_audio">Scegli file audio (player interno)</string>
+
+    <string name="section_presets">Preset</string>
+    <string name="import_presets">Importa preset da cartella</string>
+    <string name="open_preset_browser">Apri browser preset</string>
+
+    <string name="section_playback_mode">Modalità di scorrimento preset</string>
+    <string name="preset_duration">Durata preset (secondi, ignorata in modalità manuale)</string>
+
+    <string name="only_favorites">Solo preferiti</string>
+    <string name="new_playlist">Nuova playlist</string>
+    <string name="save_playlist">Salva playlist</string>
+</resources>

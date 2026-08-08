@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView android:text="@string/section_logo" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnPickLogo" android:text="@string/pick_logo" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_pulse" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <RadioGroup android:id="@+id/pulseVisualGroup" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <RadioButton android:id="@+id/radioScale" android:text="@string/pulse_scale" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <RadioButton android:id="@+id/radioOpacity" android:text="@string/pulse_opacity" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <RadioButton android:id="@+id/radioBoth" android:text="@string/pulse_both" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </RadioGroup>
+        <TextView android:text="@string/pulse_intensity" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekIntensity" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/pulse_speed" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekSpeed" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_audio_source" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Spinner android:id="@+id/audioSourceSpinner" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Spinner android:id="@+id/usbDeviceSpinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
+        <Button android:id="@+id/btnPickInternalAudio" android:text="@string/pick_internal_audio" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_presets" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnImportPresets" android:text="@string/import_presets" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnOpenBrowser" android:text="@string/open_preset_browser" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_playback_mode" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Spinner android:id="@+id/playbackModeSpinner" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Spinner android:id="@+id/playlistSpinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
+        <TextView android:text="@string/preset_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekDuration" android:max="120" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+</ScrollView>
