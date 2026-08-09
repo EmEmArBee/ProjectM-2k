@@ -17,6 +17,12 @@ add_library(projectmoverlay-jni SHARED
     native-lib.cpp
 )
 
+# projectM (incluso sopra) imposta CMAKE_DEBUG_POSTFIX a "d" per le build
+# Debug: senza questa riga il nostro .so verrebbe chiamato
+# "libprojectmoverlay-jnid.so" invece di "libprojectmoverlay-jni.so", e
+# System.loadLibrary("projectmoverlay-jni") in Kotlin non lo troverebbe più.
+set_target_properties(projectmoverlay-jni PROPERTIES DEBUG_POSTFIX "")
+
 find_library(log-lib log)
 find_library(gles3-lib GLESv3)
 find_library(egl-lib EGL)

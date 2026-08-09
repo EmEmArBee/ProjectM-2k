@@ -225,7 +225,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        glView.onResume()
+        if (nativeLibraryOk) glView.onResume()
         // le impostazioni potrebbero essere cambiate (sorgente audio, modalità, logo, playlist)
         applyLogoFromPrefs()
         startAudioEngine()
@@ -235,7 +235,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        glView.onPause()
+        if (nativeLibraryOk) glView.onPause()
         audioEngine.stop()
         super.onPause()
     }
