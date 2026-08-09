@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.Spinner
@@ -59,12 +60,19 @@ class SettingsActivity : AppCompatActivity() {
         setupAudioSourceSection()
         setupPresetsSection()
         setupPlaybackModeSection()
+        setupDisplaySection()
     }
 
     private fun setupLogoSection() {
         findViewById<Button>(R.id.btnPickLogo).setOnClickListener {
             pickLogo.launch(arrayOf("image/png"))
         }
+        // 100 = scala 1.0x (dimensione base), range 10%..250%
+        val seekLogoScale = findViewById<SeekBar>(R.id.seekLogoScale)
+        seekLogoScale.progress = (prefs.logoScale * 100).toInt()
+        seekLogoScale.setOnSeekBarChangeListener(simpleSeekListener {
+            prefs.logoScale = maxOf(it, 10) / 100f
+        })
     }
 
     private fun setupPulseSection() {
@@ -112,6 +120,17 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnPickInternalAudio).setOnClickListener {
             pickInternalAudio.launch(arrayOf("audio/*"))
         }
+
+        // 100 = gain 1.0x (nessuna amplificazione), range 0x..3x
+        val seekGain = findViewById<SeekBar>(R.id.seekGain)
+        seekGain.progress = (prefs.audioGain * 100).toInt()
+        seekGain.setOnSeekBarChangeListener(simpleSeekListener { prefs.audioGain = it / 100f })
+    }
+
+    private fun setupDisplaySection() {
+        val fullscreenCheck = findViewById<CheckBox>(R.id.fullscreenCheck)
+        fullscreenCheck.isChecked = prefs.fullscreenImmersive
+        fullscreenCheck.setOnCheckedChangeListener { _, checked -> prefs.fullscreenImmersive = checked }
     }
 
     private fun refreshUsbDevices(spinner: Spinner) {

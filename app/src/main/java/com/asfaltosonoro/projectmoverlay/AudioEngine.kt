@@ -22,7 +22,8 @@ import kotlin.concurrent.thread
  *    sulla sessione di quel player)
  *
  * In tutti i casi il PCM raccolto viene inoltrato sia a projectM
- * (ProjectMBridge.nativePcmAdd) sia al BassEnergyAnalyzer per la pulsazione del logo.
+ * (ProjectMBridge.nativePcmAdd) sia al BassEnergyAnalyzer per la pulsazione del logo,
+ * dopo aver applicato il gain scelto dall'utente.
  */
 class AudioEngine(
     private val context: Context,
@@ -32,6 +33,7 @@ class AudioEngine(
     private val sampleRate = 44100
     private var recordThread: Thread? = null
     @Volatile private var running = false
+    @Volatile private var gain: Float = 1f
 
     private var mediaPlayer: MediaPlayer? = null
     private var visualizer: Visualizer? = null
@@ -46,8 +48,9 @@ class AudioEngine(
         }
     }
 
-    fun start(source: AudioSourceType, usbDeviceId: Int, internalPlayerUri: Uri?) {
+    fun start(source: AudioSourceType, usbDeviceId: Int, internalPlayerUri: Uri?, inputGain: Float = 1f) {
         stop()
+        gain = inputGain
         when (source) {
             AudioSourceType.MIC -> startAudioRecord(preferredDevice = null)
             AudioSourceType.USB -> {
@@ -57,6 +60,11 @@ class AudioEngine(
             }
             AudioSourceType.INTERNAL_PLAYER -> startInternalPlayer(internalPlayerUri)
         }
+    }
+
+    /** Permette di cambiare il gain "a caldo" senza riavviare la cattura audio. */
+    fun setGain(newGain: Float) {
+        gain = newGain
     }
 
     fun stop() {
@@ -70,6 +78,14 @@ class AudioEngine(
 
         mediaPlayer?.release()
         mediaPlayer = null
+    }
+
+    private fun applyGain(samples: ShortArray, g: Float) {
+        if (g == 1f) return
+        for (i in samples.indices) {
+            val amplified = (samples[i] * g).toInt().coerceIn(-32768, 32767)
+            samples[i] = amplified.toShort()
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -97,6 +113,7 @@ class AudioEngine(
                 val read = record.read(buffer, 0, buffer.size)
                 if (read > 0) {
                     val chunk = if (read == buffer.size) buffer else buffer.copyOf(read)
+                    applyGain(chunk, gain)
                     ProjectMBridge.nativePcmAdd(chunk, 1)
                     val level = bassAnalyzer.process(chunk)
                     mainHandler.post { onBassLevel(level) }
@@ -123,6 +140,7 @@ class AudioEngine(
                     waveform ?: return
                     val pcm = ShortArray(waveform.size)
                     for (i in waveform.indices) pcm[i] = (((waveform[i].toInt() and 0xFF) - 128) * 256).toShort()
+                    applyGain(pcm, gain)
                     ProjectMBridge.nativePcmAdd(pcm, 1)
                     val level = bassAnalyzer.process(pcm)
                     mainHandler.post { onBassLevel(level) }

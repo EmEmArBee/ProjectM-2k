@@ -59,4 +59,18 @@ class Prefs(context: Context) {
     var importedFolderUri: Uri?
         get() = sp.getString("imported_folder_uri", null)?.let { Uri.parse(it) }
         set(value) = sp.edit().putString("imported_folder_uri", value?.toString()).apply()
+
+    /** Moltiplicatore dimensione del logo: 1.0 = dimensione base (140dp) */
+    var logoScale: Float
+        get() = sp.getFloat("logo_scale", 1f)
+        set(value) = sp.edit().putFloat("logo_scale", value).apply()
+
+    /** Moltiplicatore del segnale audio in ingresso prima di darlo a projectM */
+    var audioGain: Float
+        get() = sp.getFloat("audio_gain", 1f)
+        set(value) = sp.edit().putFloat("audio_gain", value).apply()
+
+    var fullscreenImmersive: Boolean
+        get() = sp.getBoolean("fullscreen_immersive", true)
+        set(value) = sp.edit().putBoolean("fullscreen_immersive", value).apply()
 }

@@ -12,7 +12,6 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -79,9 +78,7 @@ class MainActivity : AppCompatActivity() {
         applyLogoFromPrefs()
         BootLog.log(this, "onCreate: logo applicato")
 
-        findViewById<ImageButton>(R.id.settingsButton).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
+        applyFullscreenPref()
 
         setupGestures()
         BootLog.log(this, "onCreate: gesti configurati")
@@ -112,13 +109,17 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    // --- doppio tap: destra = next preset, sinistra = previous preset -----
+    // --- doppio tap: sinistra = preset precedente, destra = successivo,
+    // centro = apri impostazioni --------------------------------------
     private fun setupGestures() {
         gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
-                if (!nativeLibraryOk) return true
-                val screenMidpoint = glView.width / 2f
-                if (e.x >= screenMidpoint) playback.next() else playback.previous()
+                val third = glView.width / 3f
+                when {
+                    e.x < third -> if (nativeLibraryOk) playback.previous()
+                    e.x > third * 2 -> if (nativeLibraryOk) playback.next()
+                    else -> startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                }
                 return true
             }
         })
@@ -146,21 +147,26 @@ class MainActivity : AppCompatActivity() {
                 // permesso persistente perso (es. cartella rimossa): ignora, l'utente ricarica dal menu
             }
         }
+        logoView.scaleX = prefs.logoScale
+        logoView.scaleY = prefs.logoScale
     }
 
     private fun applyPulse(level: Float) {
         val intensity = prefs.pulseIntensity
+        val base = prefs.logoScale
         when (prefs.pulseVisual) {
             PulseVisual.SCALE -> {
-                val scale = 1f + intensity * level * 0.6f
+                val scale = base * (1f + intensity * level * 0.6f)
                 logoView.scaleX = scale
                 logoView.scaleY = scale
             }
             PulseVisual.OPACITY -> {
+                logoView.scaleX = base
+                logoView.scaleY = base
                 logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
             }
             PulseVisual.BOTH -> {
-                val scale = 1f + intensity * level * 0.6f
+                val scale = base * (1f + intensity * level * 0.6f)
                 logoView.scaleX = scale
                 logoView.scaleY = scale
                 logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
@@ -220,14 +226,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startAudioEngine() {
-        audioEngine.start(prefs.audioSource, prefs.usbDeviceId, prefs.internalPlayerUri)
+        audioEngine.start(prefs.audioSource, prefs.usbDeviceId, prefs.internalPlayerUri, prefs.audioGain)
+    }
+
+    private fun applyFullscreenPref() {
+        val controller = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+        if (prefs.fullscreenImmersive) {
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+            controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior =
+                androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, true)
+            controller.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applyFullscreenPref()
     }
 
     override fun onResume() {
         super.onResume()
         if (nativeLibraryOk) glView.onResume()
-        // le impostazioni potrebbero essere cambiate (sorgente audio, modalità, logo, playlist)
+        // le impostazioni potrebbero essere cambiate (sorgente audio, modalità, logo, playlist, schermo)
         applyLogoFromPrefs()
+        applyFullscreenPref()
         startAudioEngine()
         if (nativeLibraryOk) {
             playback.onModeOrPlaylistChanged()

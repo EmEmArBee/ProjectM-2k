@@ -11,6 +11,8 @@
 
         <TextView android:text="@string/section_logo" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Button android:id="@+id/btnPickLogo" android:text="@string/pick_logo" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/logo_scale" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekLogoScale" android:max="250" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_pulse" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <RadioGroup android:id="@+id/pulseVisualGroup" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
@@ -27,6 +29,8 @@
         <Spinner android:id="@+id/audioSourceSpinner" android:layout_width="match_parent" android:layout_height="wrap_content"/>
         <Spinner android:id="@+id/usbDeviceSpinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
         <Button android:id="@+id/btnPickInternalAudio" android:text="@string/pick_internal_audio" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/audio_gain" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekGain" android:max="300" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_presets" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Button android:id="@+id/btnImportPresets" android:text="@string/import_presets" android:layout_width="match_parent" android:layout_height="wrap_content"/>
@@ -37,6 +41,10 @@
         <Spinner android:id="@+id/playlistSpinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
         <TextView android:text="@string/preset_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <SeekBar android:id="@+id/seekDuration" android:max="120" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_display" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/fullscreenCheck" android:text="@string/fullscreen_immersive" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/settings_hint_double_tap" android:textStyle="italic" android:textSize="12sp" android:paddingTop="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
     </LinearLayout>
 </ScrollView>
