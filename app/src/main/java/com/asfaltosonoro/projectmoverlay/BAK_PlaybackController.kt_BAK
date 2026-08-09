@@ -18,11 +18,7 @@ enum class PlaybackMode {
  */
 class PlaybackController(
     private val repository: PresetRepository,
-    private val prefs: Prefs,
-    // projectM va toccato solo dal thread GL (stesso thread di nativeInit/
-    // nativeRenderFrame): questa lambda è glView.queueEvent { ... } passata
-    // da MainActivity. Senza, il preset non cambia mai davvero (bug corretto).
-    private val runOnGlThread: (() -> Unit) -> Unit = { it() }
+    private val prefs: Prefs
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var autoAdvanceRunnable: Runnable? = null
@@ -85,14 +81,13 @@ class PlaybackController(
     fun previous() {
         if (historyCursor > 0) {
             historyCursor--
-            val path = history[historyCursor]
-            runOnGlThread { ProjectMBridge.nativeLoadPresetFile(path, true) }
+            ProjectMBridge.nativeLoadPresetFile(history[historyCursor], true)
         }
         scheduleAutoAdvance()
     }
 
     private fun loadPath(path: String) {
-        runOnGlThread { ProjectMBridge.nativeLoadPresetFile(path, true) }
+        ProjectMBridge.nativeLoadPresetFile(path, true)
         // taglia la history "futura" se stavamo tornando indietro e ora andiamo avanti
         while (history.size > historyCursor + 1) history.removeLast()
         history.addLast(path)

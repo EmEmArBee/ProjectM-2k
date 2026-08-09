@@ -55,10 +55,11 @@ class MainActivity : AppCompatActivity() {
         prefs = Prefs(this)
         repository = PresetRepository(this).apply { ensureBundledPresetsCopied() }
         BootLog.log(this, "onCreate: prefs e repository pronti")
+        playback = PlaybackController(repository, prefs)
 
         val bassAnalyzer = BassEnergyAnalyzer(sampleRate = 44100)
         audioEngine = AudioEngine(this, bassAnalyzer) { level -> applyPulse(level) }
-        BootLog.log(this, "onCreate: audio engine creato")
+        BootLog.log(this, "onCreate: playback controller e audio engine creati")
 
         glView = GLSurfaceView(this).apply {
             setEGLContextClientVersion(3)
@@ -70,13 +71,6 @@ class MainActivity : AppCompatActivity() {
             // semplicemente nera, ma non tocca ProjectMBridge e non crasha.
         }
         BootLog.log(this, "onCreate: GLSurfaceView creata (il render vero parte async, vedi righe 'renderer.*' sotto)")
-
-        // IMPORTANTE: projectM va toccato solo dal thread GL (stesso thread di
-        // nativeInit/nativeRenderFrame). Passiamo queueEvent al controller così
-        // il cambio preset viene eseguito lì e non sul thread UI (prima il
-        // preset non cambiava mai davvero per questo motivo).
-        playback = PlaybackController(repository, prefs, runOnGlThread = { glView.queueEvent(it) })
-        BootLog.log(this, "onCreate: playback controller creato")
         findViewById<FrameLayout>(R.id.glContainer).addView(glView)
         BootLog.log(this, "onCreate: GLSurfaceView aggiunta al layout")
 
