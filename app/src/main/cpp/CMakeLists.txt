@@ -22,7 +22,7 @@ find_library(gles3-lib GLESv3)
 find_library(egl-lib EGL)
 
 target_link_libraries(projectmoverlay-jni
-    projectM4::projectM
+    libprojectM::projectM
     ${log-lib}
     ${gles3-lib}
     ${egl-lib}
