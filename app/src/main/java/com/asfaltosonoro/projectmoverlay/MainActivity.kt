@@ -29,14 +29,29 @@ class MainActivity : AppCompatActivity() {
     private lateinit var audioEngine: AudioEngine
     private lateinit var gestureDetector: GestureDetector
 
+    // false se la libreria nativa non si è caricata: in quel caso l'app resta
+    // aperta (niente visualizer, niente crash) mostrando la diagnostica.
+    private var nativeLibraryOk = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        showLastCrashIfAny() // mostra crash Java ED eventuale boot log del run precedente
+        showLastCrashIfAny() // mostra crash Java ed eventuale boot log del run precedente
         BootLog.reset(this)
         BootLog.log(this, "onCreate: inizio")
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_main)
         BootLog.log(this, "onCreate: layout impostato")
+
+        // Proviamo a caricare la libreria nativa PRIMA di toccare ProjectMBridge
+        // in qualsiasi altro punto, così se fallisce lo catturiamo qui invece
+        // di far crashare tutta l'app.
+        val nativeDiag = NativeLibDiagnostics.tryLoadAndDiagnose(this)
+        nativeLibraryOk = nativeDiag == null
+        if (nativeDiag != null) {
+            BootLog.log(this, "onCreate: libreria nativa NON caricata:\n$nativeDiag")
+        } else {
+            BootLog.log(this, "onCreate: libreria nativa caricata OK")
+        }
 
         prefs = Prefs(this)
         repository = PresetRepository(this).apply { ensureBundledPresetsCopied() }
@@ -49,8 +64,12 @@ class MainActivity : AppCompatActivity() {
 
         glView = GLSurfaceView(this).apply {
             setEGLContextClientVersion(3)
-            setRenderer(ProjectMRenderer(this@MainActivity))
-            renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            if (nativeLibraryOk) {
+                setRenderer(ProjectMRenderer(this@MainActivity))
+                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            }
+            // se la libreria nativa non c'è, niente renderer: la view resta
+            // semplicemente nera, ma non tocca ProjectMBridge e non crasha.
         }
         BootLog.log(this, "onCreate: GLSurfaceView creata (il render vero parte async, vedi righe 'renderer.*' sotto)")
         findViewById<FrameLayout>(R.id.glContainer).addView(glView)
@@ -68,14 +87,36 @@ class MainActivity : AppCompatActivity() {
         BootLog.log(this, "onCreate: gesti configurati")
         requestAudioPermissionAndStart()
         BootLog.log(this, "onCreate: richiesta permesso audio avviata")
-        playback.start()
-        BootLog.log(this, "onCreate: FINE (playback.start chiamato)")
+
+        if (nativeLibraryOk) {
+            playback.start()
+            BootLog.log(this, "onCreate: FINE (playback.start chiamato)")
+        } else {
+            BootLog.log(this, "onCreate: FINE (playback.start SALTATO, libreria nativa mancante)")
+            showNativeLibDiagnosticDialog(nativeDiag!!)
+        }
+    }
+
+    private fun showNativeLibDiagnosticDialog(diag: String) {
+        val textView = TextView(this).apply {
+            setText(diag)
+            setPadding(32, 32, 32, 32)
+            setTextIsSelectable(true)
+            movementMethod = ScrollingMovementMethod()
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Il visualizer non parte — diagnostica (tieni premuto sul testo per copiarlo)")
+            .setView(textView)
+            .setPositiveButton(android.R.string.ok, null)
+            .setCancelable(false)
+            .show()
     }
 
     // --- doppio tap: destra = next preset, sinistra = previous preset -----
     private fun setupGestures() {
         gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
+                if (!nativeLibraryOk) return true
                 val screenMidpoint = glView.width / 2f
                 if (e.x >= screenMidpoint) playback.next() else playback.previous()
                 return true
@@ -89,6 +130,7 @@ class MainActivity : AppCompatActivity() {
 
     // --- tastiera USB/bluetooth: frecce sinistra/destra --------------------
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (!nativeLibraryOk) return super.onKeyDown(keyCode, event)
         return when (keyCode) {
             KeyEvent.KEYCODE_DPAD_RIGHT -> { playback.next(); true }
             KeyEvent.KEYCODE_DPAD_LEFT -> { playback.previous(); true }
@@ -187,7 +229,9 @@ class MainActivity : AppCompatActivity() {
         // le impostazioni potrebbero essere cambiate (sorgente audio, modalità, logo, playlist)
         applyLogoFromPrefs()
         startAudioEngine()
-        playback.onModeOrPlaylistChanged()
+        if (nativeLibraryOk) {
+            playback.onModeOrPlaylistChanged()
+        }
     }
 
     override fun onPause() {
@@ -199,7 +243,9 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         playback.stop()
         audioEngine.stop()
-        ProjectMBridge.nativeDestroy()
+        if (nativeLibraryOk) {
+            ProjectMBridge.nativeDestroy()
+        }
         super.onDestroy()
     }
 }
