@@ -55,6 +55,17 @@ android {
     androidResources {
         noCompress += listOf("milk")
     }
+
+    // Fix per "UnsatisfiedLinkError: library ... not found": il packaging
+    // "moderno" (non compresso, mmap diretto dall'APK) di AGP a volte non
+    // funziona correttamente con librerie native compilate da CMake esterno.
+    // Tornando al packaging "legacy" (compresse, estratte su disco
+    // all'installazione) il caricamento è molto più affidabile.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 dependencies {

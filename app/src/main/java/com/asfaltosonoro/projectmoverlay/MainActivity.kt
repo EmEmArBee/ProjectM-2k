@@ -31,34 +31,45 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        showLastCrashIfAny()
+        showLastCrashIfAny() // mostra crash Java ED eventuale boot log del run precedente
+        BootLog.reset(this)
+        BootLog.log(this, "onCreate: inizio")
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_main)
+        BootLog.log(this, "onCreate: layout impostato")
 
         prefs = Prefs(this)
         repository = PresetRepository(this).apply { ensureBundledPresetsCopied() }
+        BootLog.log(this, "onCreate: prefs e repository pronti")
         playback = PlaybackController(repository, prefs)
 
         val bassAnalyzer = BassEnergyAnalyzer(sampleRate = 44100)
         audioEngine = AudioEngine(this, bassAnalyzer) { level -> applyPulse(level) }
+        BootLog.log(this, "onCreate: playback controller e audio engine creati")
 
         glView = GLSurfaceView(this).apply {
             setEGLContextClientVersion(3)
-            setRenderer(ProjectMRenderer())
+            setRenderer(ProjectMRenderer(this@MainActivity))
             renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
         }
+        BootLog.log(this, "onCreate: GLSurfaceView creata (il render vero parte async, vedi righe 'renderer.*' sotto)")
         findViewById<FrameLayout>(R.id.glContainer).addView(glView)
+        BootLog.log(this, "onCreate: GLSurfaceView aggiunta al layout")
 
         logoView = findViewById(R.id.logoOverlay)
         applyLogoFromPrefs()
+        BootLog.log(this, "onCreate: logo applicato")
 
         findViewById<ImageButton>(R.id.settingsButton).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         setupGestures()
+        BootLog.log(this, "onCreate: gesti configurati")
         requestAudioPermissionAndStart()
+        BootLog.log(this, "onCreate: richiesta permesso audio avviata")
         playback.start()
+        BootLog.log(this, "onCreate: FINE (playback.start chiamato)")
     }
 
     // --- doppio tap: destra = next preset, sinistra = previous preset -----
@@ -116,19 +127,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showLastCrashIfAny() {
-        val logFile = File(filesDir, "crash_log.txt")
-        if (!logFile.exists()) return
-        val text = logFile.readText()
-        logFile.delete()
+        val crashFile = File(filesDir, "crash_log.txt")
+        val javaCrash = if (crashFile.exists()) crashFile.readText().also { crashFile.delete() } else null
+        val bootLog = BootLog.readPreviousRunLog(this)
+
+        if (javaCrash == null && bootLog == null) return
+
+        val combined = buildString {
+            if (javaCrash != null) {
+                appendLine("=== ECCEZIONE JAVA ===")
+                appendLine(javaCrash)
+                appendLine()
+            }
+            if (bootLog != null) {
+                appendLine("=== LOG DELL'AVVIO PRECEDENTE (l'ultima riga è dove si è fermato) ===")
+                appendLine(bootLog)
+            }
+        }
 
         val textView = TextView(this).apply {
-            setText(text)
+            setText(combined)
             setPadding(32, 32, 32, 32)
             setTextIsSelectable(true)
             movementMethod = ScrollingMovementMethod()
         }
         AlertDialog.Builder(this)
-            .setTitle("L'app si era chiusa per un errore — tieni premuto sul testo per copiarlo")
+            .setTitle("Info sull'avvio precedente — tieni premuto sul testo per copiarlo")
             .setView(textView)
             .setPositiveButton(android.R.string.ok, null)
             .show()
