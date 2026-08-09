@@ -1,10 +1,12 @@
 package com.asfaltosonoro.projectmoverlay
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
 import android.view.GestureDetector
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -12,8 +14,10 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +31,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        showLastCrashIfAny()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_main)
 
@@ -108,6 +113,25 @@ class MainActivity : AppCompatActivity() {
                 logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
             }
         }
+    }
+
+    private fun showLastCrashIfAny() {
+        val logFile = File(filesDir, "crash_log.txt")
+        if (!logFile.exists()) return
+        val text = logFile.readText()
+        logFile.delete()
+
+        val textView = TextView(this).apply {
+            setText(text)
+            setPadding(32, 32, 32, 32)
+            setTextIsSelectable(true)
+            movementMethod = ScrollingMovementMethod()
+        }
+        AlertDialog.Builder(this)
+            .setTitle("L'app si era chiusa per un errore — tieni premuto sul testo per copiarlo")
+            .setView(textView)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     private fun requestAudioPermissionAndStart() {
