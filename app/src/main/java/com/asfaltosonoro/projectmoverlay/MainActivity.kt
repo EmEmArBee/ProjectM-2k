@@ -20,6 +20,10 @@ import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private const val BASE_LOGO_SIZE_DP = 200
+    }
+
     private lateinit var glView: GLSurfaceView
     private lateinit var logoView: ImageView
     private lateinit var repository: PresetRepository
@@ -63,7 +67,16 @@ class MainActivity : AppCompatActivity() {
         glView = GLSurfaceView(this).apply {
             setEGLContextClientVersion(3)
             if (nativeLibraryOk) {
-                setRenderer(ProjectMRenderer(this@MainActivity))
+                setRenderer(ProjectMRenderer(this@MainActivity) {
+                    // il contesto OpenGL è stato (ri)creato: se avevamo già un
+                    // preset caricato in precedenza, ripristinalo subito invece
+                    // di lasciare quello predefinito di projectM.
+                    if (::playback.isInitialized) {
+                        playback.currentPresetPath()?.let { path ->
+                            ProjectMBridge.nativeLoadPresetFile(path, false)
+                        }
+                    }
+                })
                 renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             }
             // se la libreria nativa non c'è, niente renderer: la view resta
@@ -81,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         BootLog.log(this, "onCreate: GLSurfaceView aggiunta al layout")
 
         logoView = findViewById(R.id.logoOverlay)
+        logoView.setLayerType(android.view.View.LAYER_TYPE_NONE, null)
         applyLogoFromPrefs()
         BootLog.log(this, "onCreate: logo applicato")
 
@@ -162,26 +176,38 @@ class MainActivity : AppCompatActivity() {
                 // permesso persistente perso (es. cartella rimossa): ignora, l'utente ricarica dal menu
             }
         }
-        logoView.scaleX = prefs.logoScale
-        logoView.scaleY = prefs.logoScale
+        applyLogoBaseSize()
+    }
+
+    /** Dimensione "base" del logo (dallo slider Impostazioni), applicata
+     * ridimensionando davvero la view invece che con scaleX/scaleY: una
+     * trasformazione può venire ritagliata dal layer hardware della view,
+     * un resize vero no. */
+    private fun applyLogoBaseSize() {
+        val sizePx = (BASE_LOGO_SIZE_DP * resources.displayMetrics.density * prefs.logoScale).toInt()
+        val params = logoView.layoutParams
+        params.width = sizePx
+        params.height = sizePx
+        logoView.layoutParams = params
+        logoView.scaleX = 1f
+        logoView.scaleY = 1f
     }
 
     private fun applyPulse(level: Float) {
         val intensity = prefs.pulseIntensity
-        val base = prefs.logoScale
         when (prefs.pulseVisual) {
             PulseVisual.SCALE -> {
-                val scale = base * (1f + intensity * level * 0.6f)
+                val scale = 1f + intensity * level * 0.6f
                 logoView.scaleX = scale
                 logoView.scaleY = scale
             }
             PulseVisual.OPACITY -> {
-                logoView.scaleX = base
-                logoView.scaleY = base
+                logoView.scaleX = 1f
+                logoView.scaleY = 1f
                 logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
             }
             PulseVisual.BOTH -> {
-                val scale = base * (1f + intensity * level * 0.6f)
+                val scale = 1f + intensity * level * 0.6f
                 logoView.scaleX = scale
                 logoView.scaleY = scale
                 logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)

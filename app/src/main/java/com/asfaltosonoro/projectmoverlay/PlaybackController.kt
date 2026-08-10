@@ -43,6 +43,10 @@ class PlaybackController(
         autoAdvanceRunnable?.let { handler.removeCallbacks(it) }
     }
 
+    /** Il preset attualmente caricato, se noto. Usato per ripristinarlo se
+     * il contesto OpenGL viene ricreato (es. tornando dalle Impostazioni). */
+    fun currentPresetPath(): String? = history.getOrNull(historyCursor)
+
     fun onModeOrPlaylistChanged() {
         rebuildIfNeeded()
         next()
