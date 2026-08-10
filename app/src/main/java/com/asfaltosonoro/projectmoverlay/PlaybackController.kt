@@ -82,6 +82,12 @@ class PlaybackController(
         scheduleAutoAdvance() // riavvia il timer se l'utente ha appena forzato un cambio manuale
     }
 
+    /** Usato dal browser preset "live": carica subito il preset scelto e riparte il timer. */
+    fun forceLoad(path: String) {
+        loadPath(path)
+        scheduleAutoAdvance()
+    }
+
     fun previous() {
         if (historyCursor > 0) {
             historyCursor--

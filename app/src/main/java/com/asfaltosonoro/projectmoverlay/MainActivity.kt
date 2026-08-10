@@ -116,7 +116,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     // --- doppio tap: sinistra = preset precedente, destra = successivo,
-    // centro = apri impostazioni --------------------------------------
+    // centro = apri impostazioni. Tieni premuto (long-press) = finestra live
+    // sui preset (vedi PresetPickerDialog) -----------------------------
     private fun setupGestures() {
         gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
@@ -127,6 +128,14 @@ class MainActivity : AppCompatActivity() {
                     else -> startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                 }
                 return true
+            }
+
+            override fun onLongPress(e: MotionEvent) {
+                PresetPickerDialog { path ->
+                    if (nativeLibraryOk) glView.queueEvent {
+                        ProjectMBridge.nativeLoadPresetFile(path, true)
+                    }
+                }.show(supportFragmentManager, "preset_picker")
             }
         })
         glView.setOnTouchListener { _, event ->

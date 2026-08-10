@@ -27,7 +27,7 @@
 
     <string name="section_display">Schermo</string>
     <string name="fullscreen_immersive">Schermo intero (nascondi barra di stato e tasti)</string>
-    <string name="settings_hint_double_tap">Suggerimento: doppio tap al centro dello schermo per riaprire queste impostazioni. Doppio tap a sinistra/destra per cambiare preset.</string>
+    <string name="settings_hint_double_tap">Suggerimento: doppio tap al centro per riaprire queste impostazioni, doppio tap a sinistra/destra per cambiare preset, tieni premuto per la finestra live sui preset con anteprima.</string>
 
     <string name="only_favorites">Solo preferiti</string>
     <string name="new_playlist">Nuova playlist</string>

@@ -47,6 +47,7 @@ class PresetBrowserActivity : AppCompatActivity() {
             onCheckedChanged = { entry, checked ->
                 if (checked) checkedPaths.add(entry.path) else checkedPaths.remove(entry.path)
             },
+            onAddToPlaylist = { entry -> showAddToPlaylistDialog(entry) },
             onClick = { entry ->
                 // tap su un preset fuori dalla modalità playlist: usalo come preset manuale singolo
                 prefs.manualPresetPath = entry.path
@@ -62,6 +63,39 @@ class PresetBrowserActivity : AppCompatActivity() {
         findViewById<android.widget.Button>(R.id.btnSavePlaylist).setOnClickListener { saveEditingPlaylist() }
 
         refreshList()
+    }
+
+    /** Bottone "+" su un preset: scegli a quale playlist aggiungerlo, o creane una nuova al volo. */
+    private fun showAddToPlaylistDialog(entry: PresetEntry) {
+        val existing = repository.playlistNames()
+        val options = existing + getString(R.string.new_playlist)
+        AlertDialog.Builder(this)
+            .setTitle(entry.title)
+            .setItems(options.toTypedArray()) { _, which ->
+                if (which == existing.size) {
+                    promptNewPlaylistNameAndAdd(entry)
+                } else {
+                    repository.addToPlaylist(existing[which], entry.path)
+                    Toast.makeText(this, "Aggiunto a \"${existing[which]}\"", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .show()
+    }
+
+    private fun promptNewPlaylistNameAndAdd(entry: PresetEntry) {
+        val input = EditText(this)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.new_playlist)
+            .setView(input)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    repository.addToPlaylist(name, entry.path)
+                    Toast.makeText(this, "Aggiunto a \"$name\"", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun promptNewPlaylistName() {

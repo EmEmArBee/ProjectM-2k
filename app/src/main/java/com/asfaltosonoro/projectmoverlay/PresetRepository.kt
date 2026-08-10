@@ -7,7 +7,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-data class PresetEntry(val path: String, val name: String, val favorite: Boolean)
+data class PresetEntry(val path: String, val name: String, val favorite: Boolean) {
+    /** Molti preset MilkDrop seguono la convenzione "Autore - Titolo.milk". */
+    val author: String? = name.substringBefore(" - ", missingDelimiterValue = "").ifEmpty { null }
+    val title: String = if (author != null) name.substringAfter(" - ") else name
+}
 
 /**
  * Gestisce i preset .milk: quelli inclusi nell'app (assets/presets, copiati in
@@ -103,6 +107,13 @@ class PresetRepository(private val context: Context) {
         val store = loadStore()
         store.getJSONObject("playlists").put(name, JSONArray(paths))
         saveStore(store)
+    }
+
+    /** Aggiunge un singolo preset a una playlist esistente (o appena creata). */
+    fun addToPlaylist(playlistName: String, presetPath: String) {
+        val current = playlist(playlistName).toMutableList()
+        if (presetPath !in current) current.add(presetPath)
+        savePlaylist(playlistName, current)
     }
 
     fun deletePlaylist(name: String) {
