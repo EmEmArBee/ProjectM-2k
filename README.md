@@ -54,6 +54,36 @@ ingresso, renderizzati via OpenGL ES direttamente sul telefono.
 Opzione per nascondere barra di stato e tasti di navigazione, per un utilizzo
 pulito durante un live.
 
+## Da dove prendere i preset
+
+I file preset definiscono le visualizzazioni tramite pixel shader ed
+equazioni/parametri in stile Milkdrop. La libreria projectM (e quindi
+questa app) **non include alcun preset di suo**: vanno scaricati a parte e
+importati dal telefono tramite il pulsante "Importa preset da cartella"
+nel menu Impostazioni.
+
+Pacchetti disponibili nei repository ufficiali di projectM:
+
+- [Base Milkdrop texture pack](https://github.com/projectM-visualizer/presets-milkdrop-texture-pack)
+  — consigliato in aggiunta a qualsiasi altro pacchetto di preset
+- [Cream of the Crop Pack](https://github.com/projectM-visualizer/presets-cream-of-the-crop)
+  — circa 10.000 preset selezionati da Jason Fletcher, il pacchetto
+  predefinito di projectM
+- [Classic projectM Presets](https://github.com/projectM-visualizer/presets-projectm-classic)
+  — poco più di 4.000 preset dalle versioni precedenti di projectM
+- [Milkdrop 2 Presets](https://github.com/projectM-visualizer/presets-milkdrop-original)
+  — la collezione originale distribuita con Milkdrop e Winamp
+- [En D Presets](https://github.com/projectM-visualizer/presets-en-d)
+  — circa 50 preset creati da "En D"
+
+Le collezioni bltc201, Milkdrop 1 e 2, projectM, tryptonaut e yin (quelle
+storicamente incluse con projectM) si trovano in un unico archivio qui:
+http://spiegelmc.com/pub/projectm_presets.zip
+
+Per chi vuole avere davvero tutto: il **MegaPack** raccoglie oltre 130.000
+preset (4,08 GB zippato, texture incluse):
+https://drive.google.com/file/d/1DlszoqMG-pc5v1Bo9x4NhemGPiwT-0pv/view
+
 ## Come funziona sotto il cofano
 
 - Bridge JNI minimale (`native-lib.cpp`) tra Kotlin e l'API C di libprojectM:
