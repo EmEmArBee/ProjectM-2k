@@ -185,16 +185,31 @@ class MainActivity : AppCompatActivity() {
 
     /** Dimensione "base" del logo (dallo slider Impostazioni). La view viene
      * dimensionata GIÀ al massimo che potrà mai raggiungere (base × margine
-     * di pulsazione) e parte rimpicciolita a riposo: così la pulsazione fa
-     * *crescere verso* le dimensioni reali della view invece di superarle,
-     * e non viene mai tagliata. */
+     * di pulsazione), rispettando le proporzioni REALI dell'immagine (non
+     * forzando un quadrato: un logo largo come un banner altrimenti verrebbe
+     * "adattato" dentro una forma diversa dalla sua, col rischio di margini
+     * di arrotondamento che lo tagliano ai lati). Parte rimpicciolita a
+     * riposo: la pulsazione cresce verso le dimensioni reali della view
+     * invece di superarle, quindi non viene mai tagliata. */
     private fun applyLogoBaseSize() {
         val needsHeadroom = prefs.pulseVisual != PulseVisual.OPACITY
         val headroom = if (needsHeadroom) MAX_PULSE_MULTIPLIER else 1f
-        val sizePx = (BASE_LOGO_SIZE_DP * resources.displayMetrics.density * prefs.logoScale * headroom).toInt()
+        val maxDimensionPx = BASE_LOGO_SIZE_DP * resources.displayMetrics.density * prefs.logoScale * headroom
+
+        val drawable = logoView.drawable
+        val aspect = if (drawable != null && drawable.intrinsicWidth > 0 && drawable.intrinsicHeight > 0) {
+            drawable.intrinsicWidth.toFloat() / drawable.intrinsicHeight
+        } else 1f // nessun logo caricato ancora: quadrato di default
+
+        val (widthPx, heightPx) = if (aspect >= 1f) {
+            maxDimensionPx to maxDimensionPx / aspect
+        } else {
+            maxDimensionPx * aspect to maxDimensionPx
+        }
+
         val params = logoView.layoutParams
-        params.width = sizePx
-        params.height = sizePx
+        params.width = widthPx.toInt()
+        params.height = heightPx.toInt()
         logoView.layoutParams = params
         val restScale = if (needsHeadroom) 1f / MAX_PULSE_MULTIPLIER else 1f
         logoView.scaleX = restScale
