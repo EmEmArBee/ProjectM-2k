@@ -22,6 +22,10 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val BASE_LOGO_SIZE_DP = 200
+        // fattore massimo di ingrandimento della pulsazione (deve combaciare
+        // con la formula in applyPulse: 1 + intensity*level*0.6, intensity e
+        // level entrambi al massimo 1.0)
+        private const val MAX_PULSE_MULTIPLIER = 1.6f
     }
 
     private lateinit var glView: GLSurfaceView
@@ -179,25 +183,30 @@ class MainActivity : AppCompatActivity() {
         applyLogoBaseSize()
     }
 
-    /** Dimensione "base" del logo (dallo slider Impostazioni), applicata
-     * ridimensionando davvero la view invece che con scaleX/scaleY: una
-     * trasformazione può venire ritagliata dal layer hardware della view,
-     * un resize vero no. */
+    /** Dimensione "base" del logo (dallo slider Impostazioni). La view viene
+     * dimensionata GIÀ al massimo che potrà mai raggiungere (base × margine
+     * di pulsazione) e parte rimpicciolita a riposo: così la pulsazione fa
+     * *crescere verso* le dimensioni reali della view invece di superarle,
+     * e non viene mai tagliata. */
     private fun applyLogoBaseSize() {
-        val sizePx = (BASE_LOGO_SIZE_DP * resources.displayMetrics.density * prefs.logoScale).toInt()
+        val needsHeadroom = prefs.pulseVisual != PulseVisual.OPACITY
+        val headroom = if (needsHeadroom) MAX_PULSE_MULTIPLIER else 1f
+        val sizePx = (BASE_LOGO_SIZE_DP * resources.displayMetrics.density * prefs.logoScale * headroom).toInt()
         val params = logoView.layoutParams
         params.width = sizePx
         params.height = sizePx
         logoView.layoutParams = params
-        logoView.scaleX = 1f
-        logoView.scaleY = 1f
+        val restScale = if (needsHeadroom) 1f / MAX_PULSE_MULTIPLIER else 1f
+        logoView.scaleX = restScale
+        logoView.scaleY = restScale
     }
 
     private fun applyPulse(level: Float) {
         val intensity = prefs.pulseIntensity
+        val pulseFactor = 1f + intensity * level * 0.6f // 1.0 (riposo) .. 1.6 (picco)
         when (prefs.pulseVisual) {
             PulseVisual.SCALE -> {
-                val scale = 1f + intensity * level * 0.6f
+                val scale = pulseFactor / MAX_PULSE_MULTIPLIER // resta sempre entro i bound reali della view
                 logoView.scaleX = scale
                 logoView.scaleY = scale
             }
@@ -207,7 +216,7 @@ class MainActivity : AppCompatActivity() {
                 logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
             }
             PulseVisual.BOTH -> {
-                val scale = 1f + intensity * level * 0.6f
+                val scale = pulseFactor / MAX_PULSE_MULTIPLIER
                 logoView.scaleX = scale
                 logoView.scaleY = scale
                 logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
