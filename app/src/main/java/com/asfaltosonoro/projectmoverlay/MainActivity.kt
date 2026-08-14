@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var glView: GLSurfaceView
     private lateinit var logoView: ImageView
     private lateinit var favoriteFlash: ImageView
+    private lateinit var bassAnalyzer: BassEnergyAnalyzer
     private lateinit var repository: PresetRepository
     private lateinit var prefs: Prefs
     private lateinit var playback: PlaybackController
@@ -65,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         repository = PresetRepository(this).apply { ensureBundledPresetsCopied() }
         BootLog.log(this, "onCreate: prefs e repository pronti")
 
-        val bassAnalyzer = BassEnergyAnalyzer(sampleRate = 44100)
+        bassAnalyzer = BassEnergyAnalyzer(sampleRate = 44100).apply { beatThreshold = prefs.beatDetectionThreshold }
         audioEngine = AudioEngine(this, bassAnalyzer) { level ->
             applyPulse(level)
             if (bassAnalyzer.lastWasBeat && nativeLibraryOk && ::playback.isInitialized) {
@@ -212,14 +213,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyLogoFromPrefs() {
-        prefs.logoUri?.let { uri ->
+        val uri = prefs.logoUri
+        if (uri != null) {
             try {
                 logoView.setImageURI(uri)
             } catch (_: SecurityException) {
                 // permesso persistente perso (es. cartella rimossa): ignora, l'utente ricarica dal menu
             }
+        } else {
+            logoView.setImageDrawable(null) // "Rimuovi logo" dalle Impostazioni
         }
         applyLogoBaseSize()
+        logoView.alpha = prefs.logoBaseAlpha
     }
 
     /** Dimensione "base" del logo (dallo slider Impostazioni). La view viene
@@ -257,23 +262,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyPulse(level: Float) {
         val intensity = prefs.pulseIntensity
+        val baseAlpha = prefs.logoBaseAlpha
         val pulseFactor = 1f + intensity * level * 0.6f // 1.0 (riposo) .. 1.6 (picco)
         when (prefs.pulseVisual) {
             PulseVisual.SCALE -> {
                 val scale = pulseFactor / MAX_PULSE_MULTIPLIER // resta sempre entro i bound reali della view
                 logoView.scaleX = scale
                 logoView.scaleY = scale
+                // bug corretto: prima, passando da "Entrambi" a "Scala", l'opacità
+                // restava "congelata" all'ultimo valore lasciato dalla pulsazione
+                // precedente invece di tornare a quella base impostata.
+                logoView.alpha = baseAlpha
             }
             PulseVisual.OPACITY -> {
                 logoView.scaleX = 1f
                 logoView.scaleY = 1f
-                logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
+                logoView.alpha = (baseAlpha * (0.35f + intensity * level * 0.65f)).coerceIn(0f, 1f)
             }
             PulseVisual.BOTH -> {
                 val scale = pulseFactor / MAX_PULSE_MULTIPLIER
                 logoView.scaleX = scale
                 logoView.scaleY = scale
-                logoView.alpha = (0.35f + intensity * level * 0.65f).coerceIn(0f, 1f)
+                logoView.alpha = (baseAlpha * (0.35f + intensity * level * 0.65f)).coerceIn(0f, 1f)
             }
         }
     }
@@ -357,6 +367,7 @@ class MainActivity : AppCompatActivity() {
         // le impostazioni potrebbero essere cambiate (sorgente audio, modalità, logo, playlist, schermo)
         applyLogoFromPrefs()
         applyFullscreenPref()
+        bassAnalyzer.beatThreshold = prefs.beatDetectionThreshold
         startAudioEngine()
         if (nativeLibraryOk) {
             glView.queueEvent { ProjectMBridge.nativeSetTransitionDuration(prefs.transitionDurationSeconds) }

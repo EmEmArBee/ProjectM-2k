@@ -22,6 +22,11 @@ class BassEnergyAnalyzer(private val sampleRate: Int) {
     /** 0..1: più alto = risposta più rapida ai transienti (kick) */
     var speed: Float = 0.5f
 
+    /** 0..1: livello di energia dei bassi oltre il quale scatta un "colpo".
+     * Più basso = più sensibile (rileva anche bassi leggeri), più alto =
+     * scatta solo sui colpi molto marcati. Regolabile dalle Impostazioni. */
+    var beatThreshold: Float = 0.5f
+
     /** true se l'ultima process() ha rilevato l'inizio di un "colpo" di basso. */
     @Volatile var lastWasBeat: Boolean = false
         private set
@@ -45,7 +50,6 @@ class BassEnergyAnalyzer(private val sampleRate: Int) {
         envelope += if (rms > envelope) (rms - envelope) * attack else (rms - envelope) * release
         val level = envelope.toFloat().coerceIn(0f, 1f)
 
-        val beatThreshold = 0.5
         val refractoryMs = 220L
         val now = System.currentTimeMillis()
         lastWasBeat = envelope > beatThreshold &&

@@ -11,8 +11,11 @@
 
         <TextView android:text="@string/section_logo" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Button android:id="@+id/btnPickLogo" android:text="@string/pick_logo" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnRemoveLogo" android:text="@string/remove_logo" android:layout_width="match_parent" android:layout_height="wrap_content"/>
         <TextView android:text="@string/logo_scale" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <SeekBar android:id="@+id/seekLogoScale" android:max="250" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/logo_base_alpha" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekLogoAlpha" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_pulse" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <RadioGroup android:id="@+id/pulseVisualGroup" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
@@ -24,6 +27,8 @@
         <SeekBar android:id="@+id/seekIntensity" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
         <TextView android:text="@string/pulse_speed" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <SeekBar android:id="@+id/seekSpeed" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/beat_threshold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBeatThreshold" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_audio_source" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Spinner android:id="@+id/audioSourceSpinner" android:layout_width="match_parent" android:layout_height="wrap_content"/>

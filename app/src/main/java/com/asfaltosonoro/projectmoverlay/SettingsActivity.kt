@@ -91,12 +91,20 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnPickLogo).setOnClickListener {
             pickLogo.launch(arrayOf("image/png"))
         }
+        findViewById<Button>(R.id.btnRemoveLogo).setOnClickListener {
+            prefs.logoUri = null
+            Toast.makeText(this, "Logo rimosso", Toast.LENGTH_SHORT).show()
+        }
         // 100 = scala 1.0x (dimensione base), range 10%..250%
         val seekLogoScale = findViewById<SeekBar>(R.id.seekLogoScale)
         seekLogoScale.progress = (prefs.logoScale * 100).toInt()
         seekLogoScale.setOnSeekBarChangeListener(simpleSeekListener {
             prefs.logoScale = maxOf(it, 10) / 100f
         })
+
+        val seekLogoAlpha = findViewById<SeekBar>(R.id.seekLogoAlpha)
+        seekLogoAlpha.progress = (prefs.logoBaseAlpha * 100).toInt()
+        seekLogoAlpha.setOnSeekBarChangeListener(simpleSeekListener { prefs.logoBaseAlpha = it / 100f })
     }
 
     private fun setupPulseSection() {
@@ -121,6 +129,10 @@ class SettingsActivity : AppCompatActivity() {
         val seekSpeed = findViewById<SeekBar>(R.id.seekSpeed)
         seekSpeed.progress = (prefs.pulseSpeed * 100).toInt()
         seekSpeed.setOnSeekBarChangeListener(simpleSeekListener { prefs.pulseSpeed = it / 100f })
+
+        val seekBeatThreshold = findViewById<SeekBar>(R.id.seekBeatThreshold)
+        seekBeatThreshold.progress = (prefs.beatDetectionThreshold * 100).toInt()
+        seekBeatThreshold.setOnSeekBarChangeListener(simpleSeekListener { prefs.beatDetectionThreshold = it / 100f })
     }
 
     private fun setupAudioSourceSection() {

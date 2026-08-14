@@ -16,10 +16,14 @@ ingresso, renderizzati via OpenGL ES direttamente sul telefono.
 
 **Logo in sovraimpressione**
 - Carichi un PNG dal telefono direttamente dal menu Impostazioni dell'app
+  (e lo puoi rimuovere in qualsiasi momento con un bottone dedicato)
 - Dimensione regolabile (slider "zoom"), mantiene sempre le proporzioni
   originali dell'immagine
+- Opacità base regolabile, indipendente dalla pulsazione
 - Pulsa a ritmo di bassi/kick: puoi scegliere se la pulsazione agisce sulla
   scala, sull'opacità, o su entrambe, con intensità e velocità regolabili
+- Soglia di rilevamento del "colpo" di basso regolabile (più bassa = più
+  sensibile, utile per generi con bassi meno marcati)
 
 **Browser preset**
 - Preset inclusi nell'app + possibilità di importarne altri da una cartella
@@ -146,6 +150,13 @@ Actions ricompila da sola.
   dell'interfaccia
 - Il workflow builda un APK di debug (non firmato per il Play Store),
   pensato per uso personale/installazione diretta
+- **Modalità di fusione stile Photoshop per il logo** (scherma, brucia,
+  inverti...) non sono implementate: il visualizzatore usa `GLSurfaceView`,
+  che disegna su un livello grafico separato dal resto dell'interfaccia, e
+  non è possibile applicare modalità di fusione tra un `View` normale (il
+  logo) e il suo contenuto con gli strumenti standard di Android. Servirebbe
+  passare a `TextureView` (fattibile, ma un cambiamento di architettura più
+  corposo, non incluso per ora)
 
 ## Crediti
 

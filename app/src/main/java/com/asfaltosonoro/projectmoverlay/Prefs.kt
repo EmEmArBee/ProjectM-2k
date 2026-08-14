@@ -96,4 +96,17 @@ class Prefs(context: Context) {
     var transitionDurationSeconds: Float
         get() = sp.getFloat("transition_duration_seconds", 2.5f)
         set(value) = sp.edit().putFloat("transition_duration_seconds", value).apply()
+
+    /** Opacità "base" del logo a riposo (0..1). Si combina moltiplicativamente
+     * con la pulsazione nelle modalità Opacità/Entrambi. */
+    var logoBaseAlpha: Float
+        get() = sp.getFloat("logo_base_alpha", 1f)
+        set(value) = sp.edit().putFloat("logo_base_alpha", value).apply()
+
+    /** 0..1: soglia di energia dei bassi oltre la quale scatta un "colpo"
+     * rilevato (usata per la pulsazione reattiva e per il cambio preset a
+     * tempo di beat). Più bassa = più sensibile. */
+    var beatDetectionThreshold: Float
+        get() = sp.getFloat("beat_detection_threshold", 0.5f)
+        set(value) = sp.edit().putFloat("beat_detection_threshold", value).apply()
 }
