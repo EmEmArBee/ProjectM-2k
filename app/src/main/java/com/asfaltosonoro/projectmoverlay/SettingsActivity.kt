@@ -46,6 +46,29 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    private val exportBackup = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri ?: return@registerForActivityResult
+        try {
+            contentResolver.openOutputStream(uri)?.use { it.write(repository.exportBackupJson().toByteArray()) }
+            Toast.makeText(this, "Backup esportato", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Errore esportazione: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val importBackup = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri ?: return@registerForActivityResult
+        try {
+            val json = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            if (json != null) {
+                repository.importBackupJson(json)
+                Toast.makeText(this, "Backup importato", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Errore importazione: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_ProjectMOverlay_Settings)
@@ -60,6 +83,7 @@ class SettingsActivity : AppCompatActivity() {
         setupAudioSourceSection()
         setupPresetsSection()
         setupPlaybackModeSection()
+        setupBackupSection()
         setupDisplaySection()
     }
 
@@ -176,6 +200,32 @@ class SettingsActivity : AppCompatActivity() {
         val seekDuration = findViewById<SeekBar>(R.id.seekDuration)
         seekDuration.progress = prefs.presetDurationSeconds
         seekDuration.setOnSeekBarChangeListener(simpleSeekListener { prefs.presetDurationSeconds = maxOf(it, 3) })
+
+        val manualNavRandomCheck = findViewById<android.widget.CheckBox>(R.id.manualNavRandomCheck)
+        manualNavRandomCheck.isChecked = prefs.manualNavRandom
+        manualNavRandomCheck.setOnCheckedChangeListener { _, checked -> prefs.manualNavRandom = checked }
+
+        val beatSyncCheck = findViewById<CheckBox>(R.id.beatSyncCheck)
+        beatSyncCheck.isChecked = prefs.beatSyncEnabled
+        beatSyncCheck.setOnCheckedChangeListener { _, checked -> prefs.beatSyncEnabled = checked }
+
+        val seekBeatSyncN = findViewById<SeekBar>(R.id.seekBeatSyncN)
+        seekBeatSyncN.progress = prefs.beatSyncEveryNBeats - 1 // slider parte da 0, valore minimo è 1 colpo
+        seekBeatSyncN.setOnSeekBarChangeListener(simpleSeekListener { prefs.beatSyncEveryNBeats = it + 1 })
+
+        // 0..100 → 0.0..10.0 secondi
+        val seekTransition = findViewById<SeekBar>(R.id.seekTransitionDuration)
+        seekTransition.progress = (prefs.transitionDurationSeconds * 10).toInt()
+        seekTransition.setOnSeekBarChangeListener(simpleSeekListener { prefs.transitionDurationSeconds = it / 10f })
+    }
+
+    private fun setupBackupSection() {
+        findViewById<Button>(R.id.btnExportBackup).setOnClickListener {
+            exportBackup.launch("projectm_overlay_backup.json")
+        }
+        findViewById<Button>(R.id.btnImportBackup).setOnClickListener {
+            importBackup.launch(arrayOf("application/json"))
+        }
     }
 
     private fun refreshPlaylists(spinner: Spinner) {

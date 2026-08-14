@@ -23,11 +23,19 @@
     <string name="open_preset_browser">Apri browser preset</string>
 
     <string name="section_playback_mode">Modalità di scorrimento preset</string>
-    <string name="preset_duration">Durata preset (secondi, ignorata in modalità manuale)</string>
+    <string name="preset_duration">Durata preset (secondi, ignorata in modalità manuale o a tempo di beat)</string>
+    <string name="manual_nav_random">Doppio tap avanti/indietro: sempre a caso tra tutti i preset (ignora la modalità sopra)</string>
+    <string name="beat_sync">Cambia preset a tempo di beat (rileva i colpi di basso) invece che a tempo fisso</string>
+    <string name="beat_sync_every_n">Ogni quanti colpi di basso cambiare preset</string>
+    <string name="transition_duration">Durata transizione tra preset (secondi)</string>
+
+    <string name="section_backup">Backup preferiti e playlist</string>
+    <string name="export_backup">Esporta backup su file</string>
+    <string name="import_backup">Importa backup da file</string>
 
     <string name="section_display">Schermo</string>
     <string name="fullscreen_immersive">Schermo intero (nascondi barra di stato e tasti)</string>
-    <string name="settings_hint_double_tap">Suggerimento: doppio tap al centro per riaprire queste impostazioni, doppio tap a sinistra/destra per cambiare preset, tieni premuto per la finestra live sui preset con anteprima.</string>
+    <string name="settings_hint_double_tap">Suggerimento: doppio tap al centro per riaprire queste impostazioni, doppio tap a sinistra/destra per cambiare preset. Tieni premuto al centro per aggiungere/rimuovere rapido dai preferiti, tieni premuto ai lati per la finestra live sui preset.</string>
 
     <string name="only_favorites">Solo preferiti</string>
     <string name="new_playlist">Nuova playlist</string>

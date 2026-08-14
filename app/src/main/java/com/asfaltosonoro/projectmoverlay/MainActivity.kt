@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var glView: GLSurfaceView
     private lateinit var logoView: ImageView
+    private lateinit var favoriteFlash: ImageView
     private lateinit var repository: PresetRepository
     private lateinit var prefs: Prefs
     private lateinit var playback: PlaybackController
@@ -65,7 +66,12 @@ class MainActivity : AppCompatActivity() {
         BootLog.log(this, "onCreate: prefs e repository pronti")
 
         val bassAnalyzer = BassEnergyAnalyzer(sampleRate = 44100)
-        audioEngine = AudioEngine(this, bassAnalyzer) { level -> applyPulse(level) }
+        audioEngine = AudioEngine(this, bassAnalyzer) { level ->
+            applyPulse(level)
+            if (bassAnalyzer.lastWasBeat && nativeLibraryOk && ::playback.isInitialized) {
+                playback.onBeatDetected()
+            }
+        }
         BootLog.log(this, "onCreate: audio engine creato")
 
         glView = GLSurfaceView(this).apply {
@@ -75,6 +81,7 @@ class MainActivity : AppCompatActivity() {
                     // il contesto OpenGL è stato (ri)creato: se avevamo già un
                     // preset caricato in precedenza, ripristinalo subito invece
                     // di lasciare quello predefinito di projectM.
+                    ProjectMBridge.nativeSetTransitionDuration(prefs.transitionDurationSeconds)
                     if (::playback.isInitialized) {
                         playback.currentPresetPath()?.let { path ->
                             ProjectMBridge.nativeLoadPresetFile(path, false)
@@ -99,6 +106,7 @@ class MainActivity : AppCompatActivity() {
 
         logoView = findViewById(R.id.logoOverlay)
         logoView.setLayerType(android.view.View.LAYER_TYPE_NONE, null)
+        favoriteFlash = findViewById(R.id.favoriteFlash)
         applyLogoFromPrefs()
         BootLog.log(this, "onCreate: logo applicato")
 
@@ -134,8 +142,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     // --- doppio tap: sinistra = preset precedente, destra = successivo,
-    // centro = apri impostazioni. Tieni premuto (long-press) = finestra live
-    // sui preset (vedi PresetPickerDialog) -----------------------------
+    // centro = apri impostazioni. Tieni premuto (long-press): al centro =
+    // aggiungi/rimuovi rapido dai preferiti, ai lati = finestra live sui
+    // preset (vedi PresetPickerDialog) ----------------------------------
     private fun setupGestures() {
         gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
@@ -149,17 +158,47 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onLongPress(e: MotionEvent) {
-                PresetPickerDialog { path ->
-                    if (nativeLibraryOk) glView.queueEvent {
-                        ProjectMBridge.nativeLoadPresetFile(path, true)
-                    }
-                }.show(supportFragmentManager, "preset_picker")
+                val third = glView.width / 3f
+                if (e.x in third..(third * 2)) {
+                    if (nativeLibraryOk) toggleFavoriteCurrentPreset()
+                } else {
+                    PresetPickerDialog { path ->
+                        if (nativeLibraryOk) glView.queueEvent {
+                            ProjectMBridge.nativeLoadPresetFile(path, true)
+                        }
+                    }.show(supportFragmentManager, "preset_picker")
+                }
             }
         })
         glView.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
             true
         }
+    }
+
+    /** Aggiunge/rimuove dai preferiti il preset attualmente in riproduzione,
+     * con un flash della stellina a schermo come conferma visiva. */
+    private fun toggleFavoriteCurrentPreset() {
+        val path = playback.currentPresetPath() ?: return
+        val nowFavorite = !repository.isFavorite(path)
+        repository.setFavorite(path, nowFavorite)
+        showFavoriteFlash(nowFavorite)
+    }
+
+    private fun showFavoriteFlash(added: Boolean) {
+        favoriteFlash.setImageResource(
+            if (added) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off
+        )
+        favoriteFlash.animate().cancel()
+        favoriteFlash.alpha = 0f
+        favoriteFlash.scaleX = 0.6f
+        favoriteFlash.scaleY = 0.6f
+        favoriteFlash.animate()
+            .alpha(1f).scaleX(1.15f).scaleY(1.15f)
+            .setDuration(150)
+            .withEndAction {
+                favoriteFlash.animate().alpha(0f).setStartDelay(350).setDuration(300).start()
+            }.start()
     }
 
     // --- tastiera USB/bluetooth: frecce sinistra/destra --------------------
@@ -320,6 +359,7 @@ class MainActivity : AppCompatActivity() {
         applyFullscreenPref()
         startAudioEngine()
         if (nativeLibraryOk) {
+            glView.queueEvent { ProjectMBridge.nativeSetTransitionDuration(prefs.transitionDurationSeconds) }
             playback.onModeOrPlaylistChanged()
         }
     }

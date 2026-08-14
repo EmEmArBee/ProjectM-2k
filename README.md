@@ -37,6 +37,20 @@ ingresso, renderizzati via OpenGL ES direttamente sul telefono.
 - Playlist scelta, in ordine
 - Playlist scelta, in ordine sparso
 - Singolo preset fisso, cambio solo manuale
+- Opzione indipendente: far sì che il doppio tap avanti/indietro peschi
+  sempre un preset a caso tra tutti quelli disponibili, ignorando la
+  modalità impostata sopra
+- **Cambio a tempo di beat**: invece di una durata fissa in secondi, il
+  preset cambia ogni N colpi di basso rilevati (soglia + periodo di
+  refrattarietà, non è un vero beat-tracker musicale ma funziona bene per
+  house/techno/hip-hop dove il kick è marcato)
+- Durata del crossfade tra un preset e il successivo regolabile
+
+**Backup**
+Preferiti e playlist si possono esportare/importare come file JSON dal menu
+Impostazioni — utile prima di reinstallare l'app o per portarseli su un
+altro telefono (a patto di re-importare gli stessi preset nella stessa
+struttura di cartelle).
 
 **Sorgente audio** (menu Impostazioni)
 - Microfono interno del telefono
@@ -47,7 +61,9 @@ ingresso, renderizzati via OpenGL ES direttamente sul telefono.
 **Controlli durante l'uso**
 - Doppio tap a sinistra / destra sullo schermo → preset precedente / successivo
 - Doppio tap al centro → apre le Impostazioni
-- Tieni premuto → apre la finestra live sui preset (vedi sopra)
+- Tieni premuto al centro → aggiunge/rimuove rapidamente dai preferiti il
+  preset in riproduzione in quel momento (con una stellina di conferma)
+- Tieni premuto ai lati → apre la finestra live sui preset (vedi sopra)
 - Frecce ← → di una tastiera USB/bluetooth collegata → preset precedente/successivo
 
 **Schermo intero immersivo**
@@ -102,6 +118,25 @@ https://drive.google.com/file/d/1DlszoqMG-pc5v1Bo9x4NhemGPiwT-0pv/view
 - La cattura audio (`AudioEngine.kt`) usa `AudioRecord` per microfono/USB
   (con instradamento sul dispositivo scelto) e `Visualizer` agganciato alla
   sessione del `MediaPlayer` per il player interno.
+
+## Compilazione (via browser, senza Git né terminale)
+
+La build dell'APK è automatica su GitHub Actions: il workflow scarica da
+solo il codice di libprojectM e compila tutto, senza bisogno di Android
+Studio, Git o terminale in locale.
+
+1. Crea un repository vuoto su [github.com](https://github.com)
+2. Carica il contenuto di questa cartella trascinandolo nella pagina
+   "upload files" di GitHub
+3. Vai sulla tab **Actions**: la build parte da sola (10-20 minuti la prima
+   volta, poi più veloce grazie alla cache)
+4. Scarica l'APK dagli **Artifacts** del run completato e installalo sul
+   telefono (serve abilitare "Installa app sconosciute" per l'app che usi
+   per aprire il file)
+
+Per aggiornare l'app dopo una modifica: ricarichi i file cambiati con
+"Add file → Upload files" (o l'editor ✏️ sul singolo file), e GitHub
+Actions ricompila da sola.
 
 ## Limiti noti
 

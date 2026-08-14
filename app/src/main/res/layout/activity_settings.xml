@@ -41,6 +41,16 @@
         <Spinner android:id="@+id/playlistSpinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
         <TextView android:text="@string/preset_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <SeekBar android:id="@+id/seekDuration" android:max="120" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/manualNavRandomCheck" android:text="@string/manual_nav_random" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/beatSyncCheck" android:text="@string/beat_sync" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/beat_sync_every_n" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBeatSyncN" android:max="15" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/transition_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekTransitionDuration" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_backup" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnExportBackup" android:text="@string/export_backup" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnImportBackup" android:text="@string/import_backup" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_display" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <CheckBox android:id="@+id/fullscreenCheck" android:text="@string/fullscreen_immersive" android:layout_width="wrap_content" android:layout_height="wrap_content"/>

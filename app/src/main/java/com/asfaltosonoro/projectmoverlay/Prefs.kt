@@ -73,4 +73,27 @@ class Prefs(context: Context) {
     var fullscreenImmersive: Boolean
         get() = sp.getBoolean("fullscreen_immersive", true)
         set(value) = sp.edit().putBoolean("fullscreen_immersive", value).apply()
+
+    /** Se true, il doppio tap avanti/indietro pesca sempre un preset casuale
+     * tra TUTTI quelli disponibili, ignorando la modalità di scorrimento
+     * automatico impostata. */
+    var manualNavRandom: Boolean
+        get() = sp.getBoolean("manual_nav_random", false)
+        set(value) = sp.edit().putBoolean("manual_nav_random", value).apply()
+
+    /** Se true, il cambio preset automatico segue i colpi di basso rilevati
+     * invece della durata fissa in secondi. */
+    var beatSyncEnabled: Boolean
+        get() = sp.getBoolean("beat_sync_enabled", false)
+        set(value) = sp.edit().putBoolean("beat_sync_enabled", value).apply()
+
+    /** Ogni quanti colpi di basso rilevati cambiare preset, in modalità beat sync. */
+    var beatSyncEveryNBeats: Int
+        get() = sp.getInt("beat_sync_every_n", 4)
+        set(value) = sp.edit().putInt("beat_sync_every_n", value).apply()
+
+    /** Durata (secondi) del crossfade tra un preset e il successivo. */
+    var transitionDurationSeconds: Float
+        get() = sp.getFloat("transition_duration_seconds", 2.5f)
+        set(value) = sp.edit().putFloat("transition_duration_seconds", value).apply()
 }
