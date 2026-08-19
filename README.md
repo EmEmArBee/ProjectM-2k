@@ -78,7 +78,7 @@ pulito durante un live.
 
 I file preset definiscono le visualizzazioni tramite pixel shader ed
 equazioni/parametri in stile Milkdrop. La libreria projectM (e quindi
-questa app) **non include alcun preset di suo**.
+questa app).
 
 **Download diretto dall'app** (menu Impostazioni → "Scarica pacchetti
 preset"): un tap e il pacchetto scelto viene scaricato e scompattato da
@@ -132,24 +132,6 @@ preset da cartella"):
   (con instradamento sul dispositivo scelto) e `Visualizer` agganciato alla
   sessione del `MediaPlayer` per il player interno.
 
-## Compilazione (via browser, senza Git né terminale)
-
-La build dell'APK è automatica su GitHub Actions: il workflow scarica da
-solo il codice di libprojectM e compila tutto, senza bisogno di Android
-Studio, Git o terminale in locale.
-
-1. Crea un repository vuoto su [github.com](https://github.com)
-2. Carica il contenuto di questa cartella trascinandolo nella pagina
-   "upload files" di GitHub
-3. Vai sulla tab **Actions**: la build parte da sola (10-20 minuti la prima
-   volta, poi più veloce grazie alla cache)
-4. Scarica l'APK dagli **Artifacts** del run completato e installalo sul
-   telefono (serve abilitare "Installa app sconosciute" per l'app che usi
-   per aprire il file)
-
-Per aggiornare l'app dopo una modifica: ricarichi i file cambiati con
-"Add file → Upload files" (o l'editor ✏️ sul singolo file), e GitHub
-Actions ricompila da sola.
 
 ## Limiti noti
 
