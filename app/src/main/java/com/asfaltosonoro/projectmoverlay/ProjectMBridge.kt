@@ -9,6 +9,7 @@ object ProjectMBridge {
     external fun nativeResize(width: Int, height: Int)
     external fun nativeRenderFrame()
     external fun nativeLoadPresetFile(path: String, smoothTransition: Boolean)
+    external fun nativeSetTransitionDuration(seconds: Float)
     external fun nativePcmAdd(samples: ShortArray, channels: Int)
     external fun nativeDestroy()
 }

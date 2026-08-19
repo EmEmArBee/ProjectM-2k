@@ -41,8 +41,37 @@ class SettingsActivity : AppCompatActivity() {
         )
         prefs.importedFolderUri = uri
         Toast.makeText(this, "Importazione in corso…", Toast.LENGTH_SHORT).show()
-        repository.importFolder(uri) { count ->
-            runOnUiThread { Toast.makeText(this, "Importati $count preset", Toast.LENGTH_LONG).show() }
+        repository.importFolder(uri) { count, error ->
+            runOnUiThread {
+                if (error != null) {
+                    Toast.makeText(this, error, Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this, "Importati $count preset", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private val exportBackup = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri ?: return@registerForActivityResult
+        try {
+            contentResolver.openOutputStream(uri)?.use { it.write(repository.exportBackupJson().toByteArray()) }
+            Toast.makeText(this, "Backup esportato", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Errore esportazione: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val importBackup = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri ?: return@registerForActivityResult
+        try {
+            val json = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            if (json != null) {
+                repository.importBackupJson(json)
+                Toast.makeText(this, "Backup importato", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Errore importazione: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -60,6 +89,7 @@ class SettingsActivity : AppCompatActivity() {
         setupAudioSourceSection()
         setupPresetsSection()
         setupPlaybackModeSection()
+        setupBackupSection()
         setupDisplaySection()
     }
 
@@ -67,12 +97,20 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnPickLogo).setOnClickListener {
             pickLogo.launch(arrayOf("image/png"))
         }
+        findViewById<Button>(R.id.btnRemoveLogo).setOnClickListener {
+            prefs.logoUri = null
+            Toast.makeText(this, "Logo rimosso", Toast.LENGTH_SHORT).show()
+        }
         // 100 = scala 1.0x (dimensione base), range 10%..250%
         val seekLogoScale = findViewById<SeekBar>(R.id.seekLogoScale)
         seekLogoScale.progress = (prefs.logoScale * 100).toInt()
         seekLogoScale.setOnSeekBarChangeListener(simpleSeekListener {
             prefs.logoScale = maxOf(it, 10) / 100f
         })
+
+        val seekLogoAlpha = findViewById<SeekBar>(R.id.seekLogoAlpha)
+        seekLogoAlpha.progress = (prefs.logoBaseAlpha * 100).toInt()
+        seekLogoAlpha.setOnSeekBarChangeListener(simpleSeekListener { prefs.logoBaseAlpha = it / 100f })
     }
 
     private fun setupPulseSection() {
@@ -97,6 +135,10 @@ class SettingsActivity : AppCompatActivity() {
         val seekSpeed = findViewById<SeekBar>(R.id.seekSpeed)
         seekSpeed.progress = (prefs.pulseSpeed * 100).toInt()
         seekSpeed.setOnSeekBarChangeListener(simpleSeekListener { prefs.pulseSpeed = it / 100f })
+
+        val seekBeatThreshold = findViewById<SeekBar>(R.id.seekBeatThreshold)
+        seekBeatThreshold.progress = (prefs.beatDetectionThreshold * 100).toInt()
+        seekBeatThreshold.setOnSeekBarChangeListener(simpleSeekListener { prefs.beatDetectionThreshold = it / 100f })
     }
 
     private fun setupAudioSourceSection() {
@@ -131,6 +173,10 @@ class SettingsActivity : AppCompatActivity() {
         val fullscreenCheck = findViewById<CheckBox>(R.id.fullscreenCheck)
         fullscreenCheck.isChecked = prefs.fullscreenImmersive
         fullscreenCheck.setOnCheckedChangeListener { _, checked -> prefs.fullscreenImmersive = checked }
+
+        val performanceModeCheck = findViewById<CheckBox>(R.id.performanceModeCheck)
+        performanceModeCheck.isChecked = prefs.performanceMode
+        performanceModeCheck.setOnCheckedChangeListener { _, checked -> prefs.performanceMode = checked }
     }
 
     private fun refreshUsbDevices(spinner: Spinner) {
@@ -149,6 +195,52 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnOpenBrowser).setOnClickListener {
             startActivity(Intent(this, PresetBrowserActivity::class.java))
         }
+
+        val container = findViewById<android.widget.LinearLayout>(R.id.presetPacksContainer)
+        container.removeAllViews()
+        PresetRepository.AVAILABLE_PACKS.forEach { pack ->
+            val button = Button(this).apply {
+                text = "${pack.displayName} (${pack.sizeLabel})"
+                setOnClickListener { downloadPack(pack, this) }
+            }
+            container.addView(button)
+
+            val description = android.widget.TextView(this).apply {
+                text = pack.description
+                textSize = 12f
+                setPadding(0, 0, 0, 12)
+            }
+            container.addView(description)
+        }
+    }
+
+    private fun downloadPack(pack: PresetPack, button: Button) {
+        button.isEnabled = false
+        val originalText = "${pack.displayName} (${pack.sizeLabel})"
+        button.text = "Download 0%…"
+        Toast.makeText(this, "Download di \"${pack.displayName}\" avviato", Toast.LENGTH_SHORT).show()
+
+        repository.downloadAndExtractPresetPack(
+            pack.downloadUrl,
+            onProgress = { percent ->
+                runOnUiThread { button.text = "Download $percent%…" }
+            },
+            onFinished = { count, error ->
+                runOnUiThread {
+                    button.isEnabled = true
+                    button.text = originalText
+                    if (error != null) {
+                        Toast.makeText(
+                            this,
+                            "Errore scaricando \"${pack.displayName}\": $error",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(this, "Importati $count preset da \"${pack.displayName}\"", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        )
     }
 
     private fun setupPlaybackModeSection() {
@@ -176,6 +268,32 @@ class SettingsActivity : AppCompatActivity() {
         val seekDuration = findViewById<SeekBar>(R.id.seekDuration)
         seekDuration.progress = prefs.presetDurationSeconds
         seekDuration.setOnSeekBarChangeListener(simpleSeekListener { prefs.presetDurationSeconds = maxOf(it, 3) })
+
+        val manualNavRandomCheck = findViewById<android.widget.CheckBox>(R.id.manualNavRandomCheck)
+        manualNavRandomCheck.isChecked = prefs.manualNavRandom
+        manualNavRandomCheck.setOnCheckedChangeListener { _, checked -> prefs.manualNavRandom = checked }
+
+        val beatSyncCheck = findViewById<CheckBox>(R.id.beatSyncCheck)
+        beatSyncCheck.isChecked = prefs.beatSyncEnabled
+        beatSyncCheck.setOnCheckedChangeListener { _, checked -> prefs.beatSyncEnabled = checked }
+
+        val seekBeatSyncN = findViewById<SeekBar>(R.id.seekBeatSyncN)
+        seekBeatSyncN.progress = prefs.beatSyncEveryNBeats - 1 // slider parte da 0, valore minimo è 1 colpo
+        seekBeatSyncN.setOnSeekBarChangeListener(simpleSeekListener { prefs.beatSyncEveryNBeats = it + 1 })
+
+        // 0..100 → 0.0..10.0 secondi
+        val seekTransition = findViewById<SeekBar>(R.id.seekTransitionDuration)
+        seekTransition.progress = (prefs.transitionDurationSeconds * 10).toInt()
+        seekTransition.setOnSeekBarChangeListener(simpleSeekListener { prefs.transitionDurationSeconds = it / 10f })
+    }
+
+    private fun setupBackupSection() {
+        findViewById<Button>(R.id.btnExportBackup).setOnClickListener {
+            exportBackup.launch("projectm_overlay_backup.json")
+        }
+        findViewById<Button>(R.id.btnImportBackup).setOnClickListener {
+            importBackup.launch(arrayOf("application/json"))
+        }
     }
 
     private fun refreshPlaylists(spinner: Spinner) {

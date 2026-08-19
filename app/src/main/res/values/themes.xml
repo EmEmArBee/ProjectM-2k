@@ -7,6 +7,17 @@
 
     <style name="Theme.ProjectMOverlay.Settings" parent="Theme.AppCompat.Light.DarkActionBar" />
 
+    <!-- Dialog del preset picker "live": niente dimming di sistema sull'intero
+         schermo (backgroundDimEnabled=false), perché la parte di schermo NON
+         coperta da questo dialog deve restare una finestra pulita e nitida
+         sul visualizer che continua a girare sotto. -->
+    <style name="Theme.ProjectMOverlay.TransparentDialog" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
     <style name="SettingsSectionTitle">
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">15sp</item>

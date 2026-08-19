@@ -32,6 +32,7 @@ class PlaybackController(
 
     private var playlistOrder: List<String> = emptyList()
     private var playlistIndex = 0
+    private var beatCounter = 0
 
     fun start() {
         rebuildIfNeeded()
@@ -39,9 +40,24 @@ class PlaybackController(
         scheduleAutoAdvance()
     }
 
+    /** Da chiamare ad ogni colpo di basso rilevato (vedi BassEnergyAnalyzer).
+     * Cambia preset ogni N colpi, se la modalità beat-sync è attiva. */
+    fun onBeatDetected() {
+        if (!prefs.beatSyncEnabled || prefs.playbackMode == PlaybackMode.MANUAL_SINGLE) return
+        beatCounter++
+        if (beatCounter >= prefs.beatSyncEveryNBeats.coerceAtLeast(1)) {
+            beatCounter = 0
+            next()
+        }
+    }
+
     fun stop() {
         autoAdvanceRunnable?.let { handler.removeCallbacks(it) }
     }
+
+    /** Il preset attualmente caricato, se noto. Usato per ripristinarlo se
+     * il contesto OpenGL viene ricreato (es. tornando dalle Impostazioni). */
+    fun currentPresetPath(): String? = history.getOrNull(historyCursor)
 
     fun onModeOrPlaylistChanged() {
         rebuildIfNeeded()
@@ -61,6 +77,7 @@ class PlaybackController(
     private fun scheduleAutoAdvance() {
         autoAdvanceRunnable?.let { handler.removeCallbacks(it) }
         if (prefs.playbackMode == PlaybackMode.MANUAL_SINGLE) return
+        if (prefs.beatSyncEnabled) return // il cambio è guidato dai beat, non da un timer fisso
         val runnable = object : Runnable {
             override fun run() {
                 next()
@@ -77,13 +94,26 @@ class PlaybackController(
     }
 
     fun next() {
-        val path = pickNextPath() ?: return
+        val path = if (prefs.manualNavRandom) {
+            repository.allPresets().randomOrNull()?.path ?: return
+        } else {
+            pickNextPath() ?: return
+        }
         loadPath(path)
         scheduleAutoAdvance() // riavvia il timer se l'utente ha appena forzato un cambio manuale
     }
 
+    /** Usato dal browser preset "live": carica subito il preset scelto e riparte il timer. */
+    fun forceLoad(path: String) {
+        loadPath(path)
+        scheduleAutoAdvance()
+    }
+
     fun previous() {
-        if (historyCursor > 0) {
+        if (prefs.manualNavRandom) {
+            val path = repository.allPresets().randomOrNull()?.path ?: return
+            loadPath(path)
+        } else if (historyCursor > 0) {
             historyCursor--
             val path = history[historyCursor]
             runOnGlThread { ProjectMBridge.nativeLoadPresetFile(path, true) }

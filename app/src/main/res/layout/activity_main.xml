@@ -2,6 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipChildren="false"
     android:background="#000000">
 
     <!-- GLSurfaceView aggiunto via codice (MainActivity) -->
@@ -18,5 +19,16 @@
         android:layout_gravity="center"
         android:scaleType="fitCenter"
         android:contentDescription="@null" />
+
+    <!-- Flash di conferma per l'aggiunta/rimozione rapida dai preferiti
+         (tieni premuto al centro dello schermo) -->
+    <ImageView
+        android:id="@+id/favoriteFlash"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_gravity="center"
+        android:alpha="0"
+        android:contentDescription="@null"
+        android:src="@android:drawable/btn_star_big_on" />
 
 </FrameLayout>

@@ -43,6 +43,13 @@ Java_com_asfaltosonoro_projectmoverlay_ProjectMBridge_nativeLoadPresetFile(JNIEn
     env->ReleaseStringUTFChars(path, p);
 }
 
+// Durata (in secondi) del crossfade tra un preset e il successivo.
+extern "C" JNIEXPORT void JNICALL
+Java_com_asfaltosonoro_projectmoverlay_ProjectMBridge_nativeSetTransitionDuration(JNIEnv *, jobject,
+                                                                                   jfloat seconds) {
+    if (gProjectM) projectm_set_soft_cut_duration(gProjectM, seconds);
+}
+
 // samples: PCM int16 interleaved
 extern "C" JNIEXPORT void JNICALL
 Java_com_asfaltosonoro_projectmoverlay_ProjectMBridge_nativePcmAdd(JNIEnv *env, jobject,

@@ -11,8 +11,11 @@
 
         <TextView android:text="@string/section_logo" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Button android:id="@+id/btnPickLogo" android:text="@string/pick_logo" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnRemoveLogo" android:text="@string/remove_logo" android:layout_width="match_parent" android:layout_height="wrap_content"/>
         <TextView android:text="@string/logo_scale" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <SeekBar android:id="@+id/seekLogoScale" android:max="250" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/logo_base_alpha" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekLogoAlpha" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_pulse" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <RadioGroup android:id="@+id/pulseVisualGroup" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
@@ -24,6 +27,8 @@
         <SeekBar android:id="@+id/seekIntensity" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
         <TextView android:text="@string/pulse_speed" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <SeekBar android:id="@+id/seekSpeed" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/beat_threshold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBeatThreshold" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_audio_source" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Spinner android:id="@+id/audioSourceSpinner" android:layout_width="match_parent" android:layout_height="wrap_content"/>
@@ -36,14 +41,29 @@
         <Button android:id="@+id/btnImportPresets" android:text="@string/import_presets" android:layout_width="match_parent" android:layout_height="wrap_content"/>
         <Button android:id="@+id/btnOpenBrowser" android:text="@string/open_preset_browser" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
+        <TextView android:text="@string/section_download_packs" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <LinearLayout android:id="@+id/presetPacksContainer" android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
         <TextView android:text="@string/section_playback_mode" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Spinner android:id="@+id/playbackModeSpinner" android:layout_width="match_parent" android:layout_height="wrap_content"/>
         <Spinner android:id="@+id/playlistSpinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
         <TextView android:text="@string/preset_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <SeekBar android:id="@+id/seekDuration" android:max="120" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/manualNavRandomCheck" android:text="@string/manual_nav_random" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/beatSyncCheck" android:text="@string/beat_sync" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/beat_sync_every_n" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBeatSyncN" android:max="15" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/transition_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekTransitionDuration" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_backup" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnExportBackup" android:text="@string/export_backup" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnImportBackup" android:text="@string/import_backup" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <TextView android:text="@string/section_display" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <CheckBox android:id="@+id/fullscreenCheck" android:text="@string/fullscreen_immersive" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/performanceModeCheck" android:text="@string/performance_mode" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <TextView android:text="@string/settings_hint_double_tap" android:textStyle="italic" android:textSize="12sp" android:paddingTop="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
     </LinearLayout>
