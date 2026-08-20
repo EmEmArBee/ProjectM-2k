@@ -34,24 +34,6 @@ class SettingsActivity : AppCompatActivity() {
         Toast.makeText(this, "File audio impostato", Toast.LENGTH_SHORT).show()
     }
 
-    private val pickImportFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        uri ?: return@registerForActivityResult
-        contentResolver.takePersistableUriPermission(
-            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        )
-        prefs.importedFolderUri = uri
-        Toast.makeText(this, "Importazione in corso…", Toast.LENGTH_SHORT).show()
-        repository.importFolder(uri) { count, error ->
-            runOnUiThread {
-                if (error != null) {
-                    Toast.makeText(this, error, Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(this, "Importati $count preset", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
-
     private val exportBackup = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri ?: return@registerForActivityResult
         try {
@@ -87,8 +69,7 @@ class SettingsActivity : AppCompatActivity() {
         setupLogoSection()
         setupPulseSection()
         setupAudioSourceSection()
-        setupPresetsSection()
-        setupPlaybackModeSection()
+        setupPresetSettingsLink()
         setupBackupSection()
         setupDisplaySection()
     }
@@ -169,122 +150,10 @@ class SettingsActivity : AppCompatActivity() {
         seekGain.setOnSeekBarChangeListener(simpleSeekListener { prefs.audioGain = it / 100f })
     }
 
-    private fun setupDisplaySection() {
-        val fullscreenCheck = findViewById<CheckBox>(R.id.fullscreenCheck)
-        fullscreenCheck.isChecked = prefs.fullscreenImmersive
-        fullscreenCheck.setOnCheckedChangeListener { _, checked -> prefs.fullscreenImmersive = checked }
-
-        val performanceModeCheck = findViewById<CheckBox>(R.id.performanceModeCheck)
-        performanceModeCheck.isChecked = prefs.performanceMode
-        performanceModeCheck.setOnCheckedChangeListener { _, checked -> prefs.performanceMode = checked }
-    }
-
-    private fun refreshUsbDevices(spinner: Spinner) {
-        val devices = audioEngine.availableUsbInputs()
-        val labels = if (devices.isEmpty()) listOf("Nessuna scheda USB rilevata")
-        else devices.map { it.productName?.toString() ?: "USB device ${it.id}" }
-        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, labels)
-        val idx = devices.indexOfFirst { it.id == prefs.usbDeviceId }
-        if (idx >= 0) spinner.setSelection(idx)
-    }
-
-    private fun setupPresetsSection() {
-        findViewById<Button>(R.id.btnImportPresets).setOnClickListener {
-            pickImportFolder.launch(null)
+    private fun setupPresetSettingsLink() {
+        findViewById<Button>(R.id.btnOpenPresetSettings).setOnClickListener {
+            startActivity(Intent(this, PresetSettingsActivity::class.java))
         }
-        findViewById<Button>(R.id.btnOpenBrowser).setOnClickListener {
-            startActivity(Intent(this, PresetBrowserActivity::class.java))
-        }
-
-        val container = findViewById<android.widget.LinearLayout>(R.id.presetPacksContainer)
-        container.removeAllViews()
-        PresetRepository.AVAILABLE_PACKS.forEach { pack ->
-            val button = Button(this).apply {
-                text = "${pack.displayName} (${pack.sizeLabel})"
-                setOnClickListener { downloadPack(pack, this) }
-            }
-            container.addView(button)
-
-            val description = android.widget.TextView(this).apply {
-                text = pack.description
-                textSize = 12f
-                setPadding(0, 0, 0, 12)
-            }
-            container.addView(description)
-        }
-    }
-
-    private fun downloadPack(pack: PresetPack, button: Button) {
-        button.isEnabled = false
-        val originalText = "${pack.displayName} (${pack.sizeLabel})"
-        button.text = "Download 0%…"
-        Toast.makeText(this, "Download di \"${pack.displayName}\" avviato", Toast.LENGTH_SHORT).show()
-
-        repository.downloadAndExtractPresetPack(
-            pack.downloadUrl,
-            onProgress = { percent ->
-                runOnUiThread { button.text = "Download $percent%…" }
-            },
-            onFinished = { count, error ->
-                runOnUiThread {
-                    button.isEnabled = true
-                    button.text = originalText
-                    if (error != null) {
-                        Toast.makeText(
-                            this,
-                            "Errore scaricando \"${pack.displayName}\": $error",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    } else {
-                        Toast.makeText(this, "Importati $count preset da \"${pack.displayName}\"", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-        )
-    }
-
-    private fun setupPlaybackModeSection() {
-        val modeSpinner = findViewById<Spinner>(R.id.playbackModeSpinner)
-        val modeLabels = listOf(
-            "Casuale tra i preferiti",
-            "Casuale tra tutti i preset",
-            "Playlist in ordine",
-            "Playlist in ordine sparso",
-            "Singolo preset (cambio manuale)"
-        )
-        modeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, modeLabels)
-        modeSpinner.setSelection(PlaybackMode.entries.indexOf(prefs.playbackMode))
-
-        val playlistSpinner = findViewById<Spinner>(R.id.playlistSpinner)
-        refreshPlaylists(playlistSpinner)
-
-        modeSpinner.onItemSelectedListener = onItemSelected { position ->
-            prefs.playbackMode = PlaybackMode.entries[position]
-        }
-        playlistSpinner.onItemSelectedListener = onItemSelected { position ->
-            repository.playlistNames().getOrNull(position)?.let { prefs.activePlaylistName = it }
-        }
-
-        val seekDuration = findViewById<SeekBar>(R.id.seekDuration)
-        seekDuration.progress = prefs.presetDurationSeconds
-        seekDuration.setOnSeekBarChangeListener(simpleSeekListener { prefs.presetDurationSeconds = maxOf(it, 3) })
-
-        val manualNavRandomCheck = findViewById<android.widget.CheckBox>(R.id.manualNavRandomCheck)
-        manualNavRandomCheck.isChecked = prefs.manualNavRandom
-        manualNavRandomCheck.setOnCheckedChangeListener { _, checked -> prefs.manualNavRandom = checked }
-
-        val beatSyncCheck = findViewById<CheckBox>(R.id.beatSyncCheck)
-        beatSyncCheck.isChecked = prefs.beatSyncEnabled
-        beatSyncCheck.setOnCheckedChangeListener { _, checked -> prefs.beatSyncEnabled = checked }
-
-        val seekBeatSyncN = findViewById<SeekBar>(R.id.seekBeatSyncN)
-        seekBeatSyncN.progress = prefs.beatSyncEveryNBeats - 1 // slider parte da 0, valore minimo è 1 colpo
-        seekBeatSyncN.setOnSeekBarChangeListener(simpleSeekListener { prefs.beatSyncEveryNBeats = it + 1 })
-
-        // 0..100 → 0.0..10.0 secondi
-        val seekTransition = findViewById<SeekBar>(R.id.seekTransitionDuration)
-        seekTransition.progress = (prefs.transitionDurationSeconds * 10).toInt()
-        seekTransition.setOnSeekBarChangeListener(simpleSeekListener { prefs.transitionDurationSeconds = it / 10f })
     }
 
     private fun setupBackupSection() {
@@ -296,17 +165,30 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun refreshPlaylists(spinner: Spinner) {
-        val names = repository.playlistNames()
-        val labels = names.ifEmpty { listOf("Nessuna playlist creata") }
-        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, labels)
-        val idx = names.indexOf(prefs.activePlaylistName)
-        if (idx >= 0) spinner.setSelection(idx)
+    private fun setupDisplaySection() {
+        val fullscreenCheck = findViewById<CheckBox>(R.id.fullscreenCheck)
+        fullscreenCheck.isChecked = prefs.fullscreenImmersive
+        fullscreenCheck.setOnCheckedChangeListener { _, checked -> prefs.fullscreenImmersive = checked }
+
+        val performanceModeCheck = findViewById<CheckBox>(R.id.performanceModeCheck)
+        performanceModeCheck.isChecked = prefs.performanceMode
+        performanceModeCheck.setOnCheckedChangeListener { _, checked -> prefs.performanceMode = checked }
+
+        // slider 0..960 → risoluzione 320..1280px
+        val seekPerformanceResolution = findViewById<SeekBar>(R.id.seekPerformanceResolution)
+        seekPerformanceResolution.progress = (prefs.performanceTargetWidth - 320).coerceIn(0, 960)
+        seekPerformanceResolution.setOnSeekBarChangeListener(simpleSeekListener {
+            prefs.performanceTargetWidth = 320 + it
+        })
     }
 
-    override fun onResume() {
-        super.onResume()
-        refreshPlaylists(findViewById(R.id.playlistSpinner))
+    private fun refreshUsbDevices(spinner: Spinner) {
+        val devices = audioEngine.availableUsbInputs()
+        val labels = if (devices.isEmpty()) listOf("Nessuna scheda USB rilevata")
+        else devices.map { it.productName?.toString() ?: "USB device ${it.id}" }
+        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, labels)
+        val idx = devices.indexOfFirst { it.id == prefs.usbDeviceId }
+        if (idx >= 0) spinner.setSelection(idx)
     }
 
     // --- helper -------------------------------------------------------

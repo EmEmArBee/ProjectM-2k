@@ -34,5 +34,10 @@
             android:name=".PresetBrowserActivity"
             android:exported="false"
             android:theme="@style/Theme.ProjectMOverlay.Settings" />
+
+        <activity
+            android:name=".PresetSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ProjectMOverlay.Settings" />
     </application>
 </manifest>

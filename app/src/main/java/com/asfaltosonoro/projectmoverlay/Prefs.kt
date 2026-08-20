@@ -122,4 +122,11 @@ class Prefs(context: Context) {
     var performanceAutoDetected: Boolean
         get() = sp.getBoolean("performance_auto_detected", false)
         set(value) = sp.edit().putBoolean("performance_auto_detected", value).apply()
+
+    /** Larghezza (px) a cui renderizzare internamente il visualizer quando la
+     * modalità prestazioni è attiva; l'altezza segue le proporzioni dello
+     * schermo. Più bassa = più leggero per la GPU, ma meno dettaglio. */
+    var performanceTargetWidth: Int
+        get() = sp.getInt("performance_target_width", 960)
+        set(value) = sp.edit().putInt("performance_target_width", value).apply()
 }

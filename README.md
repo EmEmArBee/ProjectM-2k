@@ -74,11 +74,18 @@ struttura di cartelle).
 Opzione per nascondere barra di stato e tasti di navigazione, per un utilizzo
 pulito durante un live.
 
+**Menu Impostazioni organizzato in due schermate**
+Logo, pulsazione, sorgente audio, backup e schermo restano nel menu
+principale; tutto quello che riguarda i preset (importazione, download
+pacchetti, browser, modalità di scorrimento e playlist) è raggruppato in una
+schermata dedicata dietro il bottone "PRESET", per non affollare il menu
+principale.
+
 ## Da dove prendere i preset
 
 I file preset definiscono le visualizzazioni tramite pixel shader ed
 equazioni/parametri in stile Milkdrop. La libreria projectM (e quindi
-questa app).
+questa app) **non include alcun preset di suo**.
 
 **Download diretto dall'app** (menu Impostazioni → "Scarica pacchetti
 preset"): un tap e il pacchetto scelto viene scaricato e scompattato da
@@ -132,6 +139,24 @@ preset da cartella"):
   (con instradamento sul dispositivo scelto) e `Visualizer` agganciato alla
   sessione del `MediaPlayer` per il player interno.
 
+## Compilazione (via browser, senza Git né terminale)
+
+La build dell'APK è automatica su GitHub Actions: il workflow scarica da
+solo il codice di libprojectM e compila tutto, senza bisogno di Android
+Studio, Git o terminale in locale.
+
+1. Crea un repository vuoto su [github.com](https://github.com)
+2. Carica il contenuto di questa cartella trascinandolo nella pagina
+   "upload files" di GitHub
+3. Vai sulla tab **Actions**: la build parte da sola (10-20 minuti la prima
+   volta, poi più veloce grazie alla cache)
+4. Scarica l'APK dagli **Artifacts** del run completato e installalo sul
+   telefono (serve abilitare "Installa app sconosciute" per l'app che usi
+   per aprire il file)
+
+Per aggiornare l'app dopo una modifica: ricarichi i file cambiati con
+"Add file → Upload files" (o l'editor ✏️ sul singolo file), e GitHub
+Actions ricompila da sola.
 
 ## Limiti noti
 
@@ -143,9 +168,12 @@ preset da cartella"):
   dell'interfaccia
 - Su dispositivi lenti (head unit economiche, telefoni datati) è disponibile
   una **modalità prestazioni** (menu Impostazioni) che riduce la risoluzione
-  interna del visualizzatore: l'app prova a rilevare da sola se attivarla al
-  primo avvio (RAM, numero di core, solo 32 bit — una stima grezza, non un
-  benchmark vero), ma resta sempre modificabile a mano
+  interna del visualizzatore, con uno slider per scegliere quanto (più bassa
+  = più leggero). L'app misura l'fps reale nei primi secondi di utilizzo e,
+  se troppo basso, l'attiva da sola una volta sola al primo avvio — non
+  indovina dalle specifiche del dispositivo (RAM/CPU dicono poco sulla GPU,
+  che è il vero collo di bottiglia): resta comunque sempre modificabile a
+  mano
 - Caricare un logo PNG molto pesante non rischia più di far crashare l'app
   per memoria insufficiente: l'immagine viene ridotta già in fase di
   decodifica alla dimensione che serve davvero

@@ -1,14 +1,12 @@
 package com.asfaltosonoro.projectmoverlay
 
 import android.Manifest
-import android.app.ActivityManager
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.opengl.GLSurfaceView
-import android.os.Build
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.view.GestureDetector
@@ -47,6 +45,10 @@ class MainActivity : AppCompatActivity() {
     // aperta (niente visualizer, niente crash) mostrando la diagnostica.
     private var nativeLibraryOk = true
 
+    // contatori per la misura dell'fps reale nei primi secondi (vedi onFrameRendered)
+    private var perfSampleCount = 0
+    private var perfSampleTotalNanos = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         showLastCrashIfAny() // mostra crash Java ed eventuale boot log del run precedente
@@ -80,22 +82,24 @@ class MainActivity : AppCompatActivity() {
         }
         BootLog.log(this, "onCreate: audio engine creato")
 
-        autoDetectPerformanceModeIfNeeded()
-
         glView = GLSurfaceView(this).apply {
             setEGLContextClientVersion(3)
             if (nativeLibraryOk) {
-                setRenderer(ProjectMRenderer(this@MainActivity) {
-                    // il contesto OpenGL è stato (ri)creato: se avevamo già un
-                    // preset caricato in precedenza, ripristinalo subito invece
-                    // di lasciare quello predefinito di projectM.
-                    ProjectMBridge.nativeSetTransitionDuration(prefs.transitionDurationSeconds)
-                    if (::playback.isInitialized) {
-                        playback.currentPresetPath()?.let { path ->
-                            ProjectMBridge.nativeLoadPresetFile(path, false)
+                setRenderer(ProjectMRenderer(
+                    this@MainActivity,
+                    onSurfaceReady = {
+                        // il contesto OpenGL è stato (ri)creato: se avevamo già un
+                        // preset caricato in precedenza, ripristinalo subito invece
+                        // di lasciare quello predefinito di projectM.
+                        ProjectMBridge.nativeSetTransitionDuration(prefs.transitionDurationSeconds)
+                        if (::playback.isInitialized) {
+                            playback.currentPresetPath()?.let { path ->
+                                ProjectMBridge.nativeLoadPresetFile(path, false)
+                            }
                         }
-                    }
-                })
+                    },
+                    onFrameRendered = { deltaNanos -> onFrameRendered(deltaNanos) }
+                ))
                 renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             }
             // se la libreria nativa non c'è, niente renderer: la view resta
@@ -385,22 +389,33 @@ class MainActivity : AppCompatActivity() {
         audioEngine.start(prefs.audioSource, prefs.usbDeviceId, prefs.internalPlayerUri, prefs.audioGain)
     }
 
-    /** Al primissimo avvio, prova a indovinare se il dispositivo è "debole"
-     * (poca RAM, pochi core, solo 32 bit — tipico di head unit economiche o
-     * telefoni datati) e attiva di conseguenza la modalità prestazioni.
-     * È una stima grezza, non un vero benchmark: l'utente può sempre
-     * correggerla a mano dalle Impostazioni, e da quel momento la scelta
-     * manuale non viene più sovrascritta. */
-    private fun autoDetectPerformanceModeIfNeeded() {
+    /** Misura l'fps REALE nei primi ~90 frame (invece di indovinarlo da RAM/
+     * core, che su una head unit con CPU discreta ma GPU debolissima porta
+     * a conclusioni sbagliate) e, se è troppo basso, attiva da sola la
+     * modalità prestazioni — solo al primissimo avvio, solo se l'utente non
+     * l'ha già impostata a mano, e senza mai disattivarla da sola. */
+    private fun onFrameRendered(deltaNanos: Long) {
         if (prefs.performanceAutoDetected) return
-        val am = getSystemService(ACTIVITY_SERVICE) as? ActivityManager
-        val lowRam = am?.isLowRamDevice == true
-        val fewCores = Runtime.getRuntime().availableProcessors() <= 4
-        val is32BitOnly = Build.SUPPORTED_ABIS.none { it.contains("64") }
-        prefs.performanceMode = lowRam || fewCores || is32BitOnly
+        perfSampleCount++
+        perfSampleTotalNanos += deltaNanos
+        if (perfSampleCount < 90) return
+
+        val avgMs = (perfSampleTotalNanos / perfSampleCount) / 1_000_000.0
+        val fps = 1000.0 / avgMs
         prefs.performanceAutoDetected = true
-        if (prefs.performanceMode) {
-            BootLog.log(this, "onCreate: dispositivo rilevato come lento, modalità prestazioni attivata automaticamente")
+        if (fps < 24.0 && !prefs.performanceMode) {
+            prefs.performanceMode = true
+            runOnUiThread {
+                applyPerformanceModePref()
+                Toast.makeText(
+                    this,
+                    "Dispositivo lento rilevato (~${fps.toInt()} fps): attivata la modalità prestazioni. Puoi disattivarla dalle Impostazioni.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            BootLog.log(this, "perf: fps misurato ~${fps.toInt()}, modalità prestazioni attivata automaticamente")
+        } else {
+            BootLog.log(this, "perf: fps misurato ~${fps.toInt()}, nessuna modifica automatica")
         }
     }
 
@@ -411,7 +426,7 @@ class MainActivity : AppCompatActivity() {
     private fun applyPerformanceModePref() {
         if (!nativeLibraryOk) return
         if (prefs.performanceMode) {
-            val targetWidth = 960
+            val targetWidth = prefs.performanceTargetWidth
             val ratio = resources.displayMetrics.heightPixels.toFloat() /
                 resources.displayMetrics.widthPixels.toFloat()
             val targetHeight = (targetWidth * ratio).toInt().coerceAtLeast(1)

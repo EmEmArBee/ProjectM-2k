@@ -34,11 +34,13 @@
     <string name="transition_duration">Durata transizione tra preset (secondi)</string>
 
     <string name="section_backup">Backup preferiti e playlist</string>
+    <string name="open_preset_settings">PRESET (importa, scarica, playlist, modalità)</string>
     <string name="export_backup">Esporta backup su file</string>
     <string name="import_backup">Importa backup da file</string>
 
     <string name="section_display">Schermo</string>
     <string name="performance_mode">Modalità prestazioni (riduce la risoluzione del visualizer, utile su dispositivi lenti)</string>
+    <string name="performance_resolution">Risoluzione in modalità prestazioni (più bassa = più leggero)</string>
     <string name="fullscreen_immersive">Schermo intero (nascondi barra di stato e tasti)</string>
     <string name="settings_hint_double_tap">Suggerimento: doppio tap al centro per riaprire queste impostazioni, doppio tap a sinistra/destra per cambiare preset. Tieni premuto al centro per aggiungere/rimuovere rapido dai preferiti, tieni premuto ai lati per la finestra live sui preset.</string>
 

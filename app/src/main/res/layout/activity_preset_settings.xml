@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView android:text="@string/section_presets" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnImportPresets" android:text="@string/import_presets" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Button android:id="@+id/btnOpenBrowser" android:text="@string/open_preset_browser" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_download_packs" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <LinearLayout android:id="@+id/presetPacksContainer" android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:text="@string/section_playback_mode" style="@style/SettingsSectionTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <Spinner android:id="@+id/playbackModeSpinner" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <Spinner android:id="@+id/playlistSpinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
+        <TextView android:text="@string/preset_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekDuration" android:max="120" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/manualNavRandomCheck" android:text="@string/manual_nav_random" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/beatSyncCheck" android:text="@string/beat_sync" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/beat_sync_every_n" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBeatSyncN" android:max="15" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:text="@string/transition_duration" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekTransitionDuration" android:max="100" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+</ScrollView>
